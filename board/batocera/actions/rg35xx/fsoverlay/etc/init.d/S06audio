@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# Starts audio services
+#
+
+case "$1" in
+    start)
+	value="$(batocera-settings-get audio.volume)"
+        alsactl init # init cards with alsa files
+        amixer sset 'speaker on off switch' 'on'
+	amixer sset 'Master' $value
+    ;;
+    stop)
+    ;;
+    restart|reload)
+    ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $?

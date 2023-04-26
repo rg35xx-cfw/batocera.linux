@@ -1,0 +1,27 @@
+#!/bin/sh
+
+ROMDIR=/userdata/roms
+
+# Check for roms folder in 2nd SDCard:
+# 1. Check p4, where stock firmware has its roms (Roms)
+# 2. Then p2, where batocera and other distributions have their roms
+# 3. Then p1, for single partition roms folders
+# 4. If none of those work, search for local roms in the 1st card
+# 5. Finally, just use the batocera sample content if there are no more options
+
+
+if [ -e /dev/mmcblk1p4 ]; then
+	mount /dev/mmcblk1p4 /mnt/sdcard
+	mount -o bind /mnt/sdcard /userdata/roms
+elif [ -e /dev/mmcblk1p2 ]; then
+	mount /dev/mmcblk1p2 /mnt/sdcard
+	mount -o bind /mnt/sdcard/roms /userdata/roms
+elif [ -e /dev/mmcblk1p1 ]; then
+	mount /dev/mmcblk1p1 /mnt/sdcard
+	mount -o bind /mnt/sdcard/roms /userdata/roms
+elif [ ! "$(ls -A $ROMDIR)" ];then
+	# No external roms in 2nd SDCARD, mounting batocera stock roms
+	mount -o bind /usr/share/batocera/datainit/roms /userdata/roms
+fi
+
+

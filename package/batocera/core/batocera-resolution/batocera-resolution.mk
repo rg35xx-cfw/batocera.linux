@@ -42,6 +42,10 @@ ifeq ($(BR2_PACKAGE_MALI_G31_GBM),y)
   BATOCERA_SCRIPT_RESOLUTION_TYPE=basic
 endif
 
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RG35XX),y)
+  BATOCERA_SCRIPT_RESOLUTION_TYPE=basic
+endif
+
 define BATOCERA_RESOLUTION_INSTALL_TARGET_CMDS
 	install -m 0755 $(BATOCERA_RESOLUTION_PATH)/resolution/batocera-resolution.$(BATOCERA_SCRIPT_RESOLUTION_TYPE) $(TARGET_DIR)/usr/bin/batocera-resolution
 	install -m 0755 $(BATOCERA_RESOLUTION_PATH)/screenshot/batocera-screenshot.$(BATOCERA_SCRIPT_SCREENSHOT_TYPE) $(TARGET_DIR)/usr/bin/batocera-screenshot

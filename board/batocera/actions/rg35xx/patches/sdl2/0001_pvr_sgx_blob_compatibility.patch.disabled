@@ -1,0 +1,272 @@
+From 4f60b61451473f807953b8d32bd05359bc8c5eab Mon Sep 17 00:00:00 2001
+From: JohnnyonFlame <johnnyonflame@hotmail.com>
+Date: Sat, 22 Apr 2023 02:43:53 -0300
+Subject: [PATCH] Implemented compatibility with PVR SGX blobs.
+
+This enables fbdev SDL2 on the RG35XX.
+---
+ src/video/mali-fbdev/SDL_maliopengles.c | 16 ++++-
+ src/video/mali-fbdev/SDL_maliopengles.h |  2 -
+ src/video/mali-fbdev/SDL_malivideo.c    | 96 +++++++++++++++++++++----
+ src/video/mali-fbdev/SDL_malivideo.h    | 23 ++++++
+ 4 files changed, 120 insertions(+), 17 deletions(-)
+
+diff --git a/src/video/mali-fbdev/SDL_maliopengles.c b/src/video/mali-fbdev/SDL_maliopengles.c
+index e484a4778..a1bd9b3e1 100644
+--- a/src/video/mali-fbdev/SDL_maliopengles.c
++++ b/src/video/mali-fbdev/SDL_maliopengles.c
+@@ -13,8 +13,22 @@ MALI_GLES_LoadLibrary(_THIS, const char *path)
+     return SDL_EGL_LoadLibrary(_this, path, EGL_DEFAULT_DISPLAY, 0);
+ }
+ 
++int MALI_GLES_SwapWindow(_THIS, SDL_Window * window)
++{
++    SDL_WindowData *windowdata;
++    SDL_DisplayData *displaydata;
++
++    windowdata = (SDL_WindowData*)_this->windows->driverdata;
++    displaydata = SDL_GetDisplayDriverData(0);
++
++    if (displaydata->vsync_en) {
++        long long _arg; // dummy
++        ioctl(displaydata->fb, OWLFB_WAITFORVSYNC, &_arg);
++    }
++    return SDL_EGL_SwapBuffers(_this, windowdata->egl_surface);
++}
++
+ SDL_EGL_CreateContext_impl(MALI)
+-SDL_EGL_SwapWindow_impl(MALI)
+ SDL_EGL_MakeCurrent_impl(MALI)
+ 
+ #endif /* SDL_VIDEO_DRIVER_MALI && SDL_VIDEO_OPENGL_EGL */
+diff --git a/src/video/mali-fbdev/SDL_maliopengles.h b/src/video/mali-fbdev/SDL_maliopengles.h
+index 639158f41..dfb81eee4 100644
+--- a/src/video/mali-fbdev/SDL_maliopengles.h
++++ b/src/video/mali-fbdev/SDL_maliopengles.h
+@@ -12,8 +12,6 @@
+ #define MALI_GLES_GetAttribute SDL_EGL_GetAttribute
+ #define MALI_GLES_GetProcAddress SDL_EGL_GetProcAddress
+ #define MALI_GLES_UnloadLibrary SDL_EGL_UnloadLibrary
+-#define MALI_GLES_SetSwapInterval SDL_EGL_SetSwapInterval
+-#define MALI_GLES_GetSwapInterval SDL_EGL_GetSwapInterval
+ #define MALI_GLES_DeleteContext SDL_EGL_DeleteContext
+ 
+ extern int MALI_GLES_LoadLibrary(_THIS, const char *path);
+diff --git a/src/video/mali-fbdev/SDL_malivideo.c b/src/video/mali-fbdev/SDL_malivideo.c
+index 557c13f67..4571048c7 100644
+--- a/src/video/mali-fbdev/SDL_malivideo.c
++++ b/src/video/mali-fbdev/SDL_malivideo.c
+@@ -88,8 +88,8 @@ VideoBootStrap MALI_bootstrap = {
+ int
+ MALI_VideoInit(_THIS)
+ {
++    int ttyfd;
+     struct fb_var_screeninfo vinfo;
+-    int fd;
+     SDL_VideoDisplay display;
+     SDL_DisplayMode current_mode;
+     SDL_DisplayData *data;
+@@ -99,27 +99,32 @@ MALI_VideoInit(_THIS)
+         return SDL_OutOfMemory();
+     }
+ 
+-    fd = open("/dev/fb0", O_RDWR, 0);
+-    if (fd < 0) {
++    data->fb = open("/dev/fb0", O_RDWR, 0);
++    if (data->fb < 0) {
+         return SDL_SetError("mali-fbdev: Could not open framebuffer device");
+     }
+ 
+-    if (ioctl(fd, FBIOGET_VSCREENINFO, &vinfo) < 0) {
++    if (ioctl(data->fb, FBIOGET_VSCREENINFO, &vinfo) < 0) {
+         MALI_VideoQuit(_this);
+         return SDL_SetError("mali-fbdev: Could not get framebuffer information");
+     }
+-    /* Enable triple buffering */
+-    /*
+-    vinfo.yres_virtual = vinfo.yres * 3;
+-    if (ioctl(fd, FBIOPUT_VSCREENINFO, vinfo) == -1) {
+-	printf("mali-fbdev: Error setting VSCREENINFO\n");
++
++    ttyfd = open("/dev/tty0", O_RDWR, 0);
++    if (ttyfd >= 0) {
++        ioctl(ttyfd, KDGETMODE, &data->mode_prev);
++        ioctl(ttyfd, KDSETMODE, KD_GRAPHICS);
++        close(ttyfd);
++    }
++
++    /* Enable double buffering */
++    vinfo.yres_virtual = vinfo.yres * 2;
++    if (ioctl(data->fb, FBIOPUT_VSCREENINFO, vinfo) == -1) {
++	    printf("mali-fbdev: Error setting VSCREENINFO\n");
+     }
+-    */
+-    close(fd);
+-    system("setterm -cursor off");
+ 
+     data->native_display.width = vinfo.xres;
+     data->native_display.height = vinfo.yres;
++    data->vsync_en = 1;
+ 
+     SDL_zero(current_mode);
+     current_mode.w = vinfo.xres;
+@@ -151,12 +156,21 @@ MALI_VideoInit(_THIS)
+ void
+ MALI_VideoQuit(_THIS)
+ {
++    SDL_DisplayData *displaydata;
++    int fd;
++
++    displaydata = SDL_GetDisplayDriverData(0);
++
+     /* Clear the framebuffer and ser cursor on again */
+-    int fd = open("/dev/tty", O_RDWR);
++    fd = open("/dev/tty0", O_RDWR);
++    ioctl(fd, KDSETMODE, displaydata->mode_prev);
+     ioctl(fd, VT_ACTIVATE, 5);
+     ioctl(fd, VT_ACTIVATE, 1);
+     close(fd);
+-    system("setterm -cursor on");
++    if (displaydata->fb >= 0) {
++        close(displaydata->fb);
++        displaydata->fb = -1;
++    }
+ 
+ #ifdef SDL_INPUT_LINUXEV
+     SDL_EVDEV_Quit();
+@@ -203,7 +217,12 @@ MALI_CreateWindow(_THIS, SDL_Window * window)
+             return -1;
+         }
+     }
++
+     windowdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType) &displaydata->native_display);
++    if (windowdata->egl_surface == EGL_NO_SURFACE) {
++        // Try again if the driver refuses our native_display as being fbdev_window
++        windowdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType)NULL);
++    }
+ 
+     if (windowdata->egl_surface == EGL_NO_SURFACE) {
+         MALI_VideoQuit(_this);
+@@ -225,9 +244,21 @@ void
+ MALI_DestroyWindow(_THIS, SDL_Window * window)
+ {
+     SDL_WindowData *data;
++    SDL_DisplayData *displaydata;
++
++    displaydata = SDL_GetDisplayDriverData(0);
+ 
+     data = window->driverdata;
++    if (displaydata) {
++        if (displaydata->fb >= 0) {
++            close(displaydata->fb);
++            displaydata->fb  = -1;
++        }
++    }
++
+     if (data) {
++
++
+         if (data->egl_surface != EGL_NO_SURFACE) {
+             SDL_EGL_DestroySurface(_this, data->egl_surface);
+             data->egl_surface = EGL_NO_SURFACE;
+@@ -262,6 +293,43 @@ MALI_HideWindow(_THIS, SDL_Window * window)
+ {
+ }
+ 
++int
++MALI_GLES_SetSwapInterval(_THIS, int interval)
++{
++    SDL_DisplayData *displaydata;
++
++    displaydata = SDL_GetDisplayDriverData(0);
++
++    interval = interval > 0;
++    if (displaydata) {
++        if (displaydata->vsync_en != interval) {
++            struct owlfb_sync_info sinfo;
++            sinfo.enabled = interval;
++            if (ioctl(displaydata->fb, OWLFB_VSYNC_EVENT_EN, &sinfo)) {
++                printf("OWLFB_VSYNC_EVENT_EN failed\n");
++            }
++        }
++
++        SDL_EGL_SetSwapInterval(_this, interval);
++        displaydata->vsync_en = interval;
++    }
++
++    return 0;
++}
++
++int
++MALI_GLES_GetSwapInterval(_THIS)
++{
++    SDL_DisplayData *displaydata;
++    displaydata = SDL_GetDisplayDriverData(0);
++
++    if (displaydata) {
++        return displaydata->vsync_en;
++    }
++
++    return 1;
++}
++
+ /*****************************************************************************/
+ /* SDL Window Manager function                                               */
+ /*****************************************************************************/
+diff --git a/src/video/mali-fbdev/SDL_malivideo.h b/src/video/mali-fbdev/SDL_malivideo.h
+index 65c81d9a4..1531f156d 100644
+--- a/src/video/mali-fbdev/SDL_malivideo.h
++++ b/src/video/mali-fbdev/SDL_malivideo.h
+@@ -10,15 +10,26 @@
+ #include <linux/vt.h>
+ #include <linux/fb.h>
+ #include <sys/types.h>
++#include <linux/kd.h>
+ #include <sys/stat.h>
+ #include <sys/ioctl.h>
+ #include <fcntl.h>
+ #include <unistd.h>
+ #include <stdlib.h>
+ 
++typedef struct fbdev_window
++{
++    unsigned short width;
++    unsigned short height;
++} fbdev_window;
++
++
+ typedef struct SDL_DisplayData
+ {
+     struct fbdev_window native_display;
++    int fb;
++    int vsync_en;
++    int mode_prev;
+ } SDL_DisplayData;
+ 
+ typedef struct SDL_WindowData
+@@ -26,6 +37,16 @@ typedef struct SDL_WindowData
+     EGLSurface egl_surface;
+ } SDL_WindowData;
+ 
++struct owlfb_sync_info {
++    __u8 enabled;
++    __u8 disp_id;
++    __u16 reserved2;
++};
++
++#define OWL_IOW(num, dtype)    _IOW('O', num, dtype)
++#define OWLFB_WAITFORVSYNC            OWL_IOW(57,long long)
++#define OWLFB_VSYNC_EVENT_EN          OWL_IOW(67, struct owlfb_sync_info)
++
+ /****************************************************************************/
+ /* SDL_VideoDevice functions declaration                                    */
+ /****************************************************************************/
+@@ -44,6 +65,8 @@ void MALI_HideWindow(_THIS, SDL_Window * window);
+ void MALI_DestroyWindow(_THIS, SDL_Window * window);
+ 
+ /* Window manager function */
++int MALI_GLES_SetSwapInterval(_THIS, int interval);
++int MALI_GLES_GetSwapInterval(_THIS);
+ SDL_bool MALI_GetWindowWMInfo(_THIS, SDL_Window * window,
+                              struct SDL_SysWMinfo *info);
+ 

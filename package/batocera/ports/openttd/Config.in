@@ -1,0 +1,8 @@
+config BR2_PACKAGE_OPENTTD
+	bool "OpenTTD"
+	select BR2_PACKAGE_SDL2
+	select BR2_PACKAGE_SDL2_IMAGE
+	help
+	  OpenTTD
+
+	  https://github.com/OpenTTD/OpenTTD

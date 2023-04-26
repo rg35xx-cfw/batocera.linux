@@ -80,6 +80,16 @@ doList() {
 		echo "extreme EXTREME (2400Mhz)"
 	    fi
 	    ;;
+          "rg35xx")
+		  # 240000 504000 720000 840000 1008000 1104000 1200000 1296000 1392000 1488000 
+
+                echo "powersave POWERSAVE (240 MHz)"
+                echo "low LOW (720 MHz)"
+		echo "medium MEDIUM (1008 MHz)"
+                echo "high HIGH (1200 MHz)"
+                echo "turbo TURBO (1392 MHz)"
+                echo "extreme EXTREME (1488 MHz)"
+        ;;
 	*)
 	    echo "none NONE"
     esac
@@ -198,6 +208,29 @@ setValue_odroidn2() {
     postBootRWConfig || return 1
 }
 
+setValue_rg35xx() {
+    VALUE=$1
+    preBootRWConfig || return 1
+
+    # put variable lines if not existing
+    for entry in overclocking
+    do
+	if ! grep -q "${entry}" "${GODROIDCONFFILE}"
+	then
+	    if ! echo "${entry}=" >> "${GODROIDCONFFILE}"
+	    then
+		return 1
+	    fi
+	fi
+
+    done
+    # put values
+    sed -i "s/#\?overclocking=.*/overclocking=${VALUE}/g" "${GODROIDCONFFILE}" || return 1
+
+    /etc/init.d/S02overclock start
+    postBootRWConfig || return 1
+}
+
 setValue() {
     VALUE=$1
 
@@ -296,6 +329,10 @@ setValue() {
 		setValue_odroidn2 "${VALUE}"
 	    fi
 	    ;;
+	"rg35xx")
+		setValue_rg35xx "${VALUE}"
+	    ;;
+
     esac
 }
 

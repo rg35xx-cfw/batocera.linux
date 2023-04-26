@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# Start other services...
+#
+
+echo "starting other services..."
+ 
+
+case "$1" in
+  start)
+                printf "Starting launcher: "
+                fbset -g 640 480 640 960 32
+
+                #for QLauncher wayland
+                mkdir -p /tmp/.xdg &&  chmod 0700 /tmp/.xdg
+                export XDG_RUNTIME_DIR=/tmp/.xdg
+                #weston --tty=2 --idle-time=0&
+                #sleep 1
+		#export HOME=/mnt/hdisk
+		#retroarch --verbose &
+		# xx-c /mnt/hdisk/retroarch/retroarch.cfg -L /mnt/hdisk/cores/fbneo_libretro.so /mnt/hdisk/roms/neogeo/viewpoin.zip &
+		sleep 5
+		chocolate-doom -iwad /usr/share/games/doom/doom1.wad
+#		OpenBOR4432 /mnt/hdisk/roms/openbor/CastlevaniaLegacyofDracula.pak &
+		sleep 5
+
+        ;;
+  stop)
+                killall retroarch
+                killall weston
+                printf "stop finished"
+        ;;
+  *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+        ;;
+esac
+exit 0

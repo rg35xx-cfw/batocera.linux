@@ -1,0 +1,5 @@
+# RG35XX default values
+global.retroarch.video_driver=gl
+global.retroarch.video_context_driver=gl_sdl
+global.retroarch.audio_driver=alsathread
+

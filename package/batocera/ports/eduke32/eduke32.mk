@@ -17,6 +17,11 @@ ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_BCM2711),y)
     EDUKE32_BUILD_ARGS += OPTOPT="-mcpu=cortex-a72 -mtune=cortex-a72 -ffast-math"
 endif
 
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RG35XX),y)
+    EDUKE32_BUILD_ARGS += USE_OPENGL=0
+    EDUKE32_BUILD_ARGS += OPTOPT="-mcpu=cortex-a9 -mtune=cortex-a9  -ffast-math"
+endif
+
 define EDUKE32_BUILD_CMDS
     $(MAKE) $(TARGET_CONFIGURE_OPTS) $(EDUKE32_BUILD_ARGS) -C $(@D)
     $(RM) -r $(@D)/obj

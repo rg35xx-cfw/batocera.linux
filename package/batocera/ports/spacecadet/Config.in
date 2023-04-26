@@ -1,0 +1,8 @@
+config BR2_PACKAGE_SPACECADET
+	bool "DevilutionX"
+	select BR2_PACKAGE_SDL2
+	select BR2_PACKAGE_SDL2_IMAGE
+	help
+	  SpaceCadetPinball
+
+ 	  https://github.com/k4zmu2a/SpaceCadetPinball

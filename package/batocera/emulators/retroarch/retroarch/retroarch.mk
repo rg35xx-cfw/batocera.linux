@@ -15,6 +15,10 @@ RETROARCH_CONF_OPTS = --disable-oss --enable-zlib --disable-qt --enable-threads 
     --enable-xmb --disable-discord --enable-flac --enable-lua --enable-networking \
 	--enable-translate --enable-rgui --disable-cdrom
 
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RG35XX),y)
+    RETROARCH_CONF_OPTS += --disable-v4l2
+endif
+
 ifeq ($(BR2_ENABLE_DEBUG),y)
     RETROARCH_CONF_OPTS += --enable-debug
 endif

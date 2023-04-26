@@ -1,0 +1,8 @@
+config BR2_PACKAGE_OPENRCT2
+	bool "OpenRCT2"
+	select BR2_PACKAGE_SDL2
+	select BR2_PACKAGE_SDL2_IMAGE
+	help
+	  OpenRCT2
+
+	  https://github.com/OpenRCT2/OpenRCT2

@@ -32,6 +32,10 @@ CANNONBALL_TARGET = sdl2gl
 
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY),y)
 CANNONBALL_TARGET = sdl2gl
+
+else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RG35XX),y)
+CANNONBALL_TARGET = sdl2gles
+CANNONBALL_RPI = -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
 endif
 
 # Build as release with proper target and paths
