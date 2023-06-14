@@ -1,0 +1,9 @@
+#!/bin/sh
+
+echo "Enabling zram swap..."
+
+zramctl --reset /dev/zram0
+zramctl --find --size 512M
+zramctl --find --size 512M
+mkswap /dev/zram0
+swapon /dev/zram0

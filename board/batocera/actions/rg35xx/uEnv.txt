@@ -1,0 +1,3 @@
+# Ramdisk boot (ramdisk.img)
+uenvcmd=setenv os_type linux;
+bootargs=earlyprintk clk_ignore_unused selinux=0 init=/init  

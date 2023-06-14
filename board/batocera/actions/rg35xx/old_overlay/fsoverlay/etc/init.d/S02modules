@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# Custom gpio keys module installation
+#
+
+echo "Installing custom gpio module"
+
+insmod /userdata/system/modules/dummydevice.ko
+insmod /userdata/system/modules/gpio_keys_polled.ko

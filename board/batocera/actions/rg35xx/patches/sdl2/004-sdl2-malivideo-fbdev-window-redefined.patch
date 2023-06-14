@@ -1,0 +1,16 @@
+--- a/src/video/mali-fbdev/SDL_malivideo.h	2023-05-31 16:10:06.875123576 +0000
++++ b/src/video/mali-fbdev/SDL_malivideo.h	2023-05-31 16:10:19.567102258 +0000
+@@ -38,13 +38,6 @@
+ #include <unistd.h>
+ #include <stdlib.h>
+ 
+-typedef struct fbdev_window
+-{
+-    unsigned short width;
+-    unsigned short height;
+-} fbdev_window;
+-
+-
+ typedef struct SDL_DisplayData
+ {
+     struct fbdev_window native_display;

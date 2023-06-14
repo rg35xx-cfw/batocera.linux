@@ -1,0 +1,16 @@
+#!/bin/sh
+
+echo "Enabling swap..."
+
+zramctl --reset /dev/zram0
+zramctl --find --size 512M
+mkswap /dev/zram0
+swapon --priority 90 /dev/zram0
+
+fallocate -l 512M /userdata/system/swapfile
+mkswap /userdata/system/swapfile
+swapon --priority 100 /userdata/system/swapfile
+
+echo 100 > /proc/sys/vm/swappiness
+
+

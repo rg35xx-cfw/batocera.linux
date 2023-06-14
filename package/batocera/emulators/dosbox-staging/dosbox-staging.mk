@@ -75,6 +75,11 @@ DOSBOX_STAGING_CFLAGS   += -march=armv8-a+crc -mcpu=cortex-a75 -mtune=cortex-a75
 DOSBOX_STAGING_CXXFLAGS += -march=armv8-a+crc -mcpu=cortex-a75 -mtune=cortex-a75.cortex-a55
 DOSBOX_STAGING_CONF_OPTS += -Duse_opengl=false
 endif
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RG35XX),y)
+DOSBOX_STAGING_CFLAGS   += -marm -march=armv7-a -mtune=cortex-a9 -mfpu=neon-vfpv3 -mfloat-abi=hard
+DOSBOX_STAGING_CXXFLAGS += -marm -march=armv7-a -mtune=cortex-a9 -mfpu=neon-vfpv3 -mfloat-abi=hard
+DOSBOX_STAGING_CONF_OPTS += -Duse_opengl=false
+endif
 
 define DOSBOX_STAGING_INSTALL_TARGET_CMDS
         $(INSTALL) -D $(@D)/build/dosbox $(TARGET_DIR)/usr/bin/dosbox-staging

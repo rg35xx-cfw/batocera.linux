@@ -1,0 +1,37 @@
+From 3f2a3de9d4fb6822bb813202b2a5275dfae50b44 Mon Sep 17 00:00:00 2001
+From: JohnnyonFlame <johnnyonflame@hotmail.com>
+Date: Sat, 22 Apr 2023 04:18:05 -0300
+Subject: [PATCH] Use VSync by default.
+
+---
+ src/video/mali-fbdev/SDL_malivideo.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/video/mali-fbdev/SDL_malivideo.c b/src/video/mali-fbdev/SDL_malivideo.c
+index 4571048c7..4e0d9a669 100644
+--- a/src/video/mali-fbdev/SDL_malivideo.c
++++ b/src/video/mali-fbdev/SDL_malivideo.c
+@@ -118,13 +118,13 @@ MALI_VideoInit(_THIS)
+ 
+     /* Enable double buffering */
+     vinfo.yres_virtual = vinfo.yres * 2;
+-    if (ioctl(data->fb, FBIOPUT_VSCREENINFO, vinfo) == -1) {
++    if (ioctl(data->fb, FBIOPUT_VSCREENINFO, &vinfo) == -1) {
+ 	    printf("mali-fbdev: Error setting VSCREENINFO\n");
+     }
+ 
+     data->native_display.width = vinfo.xres;
+     data->native_display.height = vinfo.yres;
+-    data->vsync_en = 1;
++    data->vsync_en = -1;
+ 
+     SDL_zero(current_mode);
+     current_mode.w = vinfo.xres;
+@@ -143,6 +143,7 @@ MALI_VideoInit(_THIS)
+     display.driverdata = data;
+ 
+     SDL_AddVideoDisplay(&display, SDL_FALSE);
++    MALI_GLES_SetSwapInterval(_this, 1); // default is vsync on.
+ 
+ #ifdef SDL_INPUT_LINUXEV
+     if (SDL_EVDEV_Init() < 0) {

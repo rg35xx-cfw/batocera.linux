@@ -1,0 +1,111 @@
+From d58f5603bc0d898fdfa508109ab03ad7dd03a456 Mon Sep 17 00:00:00 2001
+From: JohnnyonFlame <johnnyonflame@hotmail.com>
+Date: Sun, 23 Apr 2023 22:11:02 -0300
+Subject: [PATCH] Rework framebuffer descriptor lifetime.
+
+---
+ src/video/mali-fbdev/SDL_malivideo.c | 51 +++++++++++++++++-----------
+ 1 file changed, 32 insertions(+), 19 deletions(-)
+
+diff --git a/src/video/mali-fbdev/SDL_malivideo.c b/src/video/mali-fbdev/SDL_malivideo.c
+index 4e0d9a669..f45847c26 100644
+--- a/src/video/mali-fbdev/SDL_malivideo.c
++++ b/src/video/mali-fbdev/SDL_malivideo.c
+@@ -109,6 +109,15 @@ MALI_VideoInit(_THIS)
+         return SDL_SetError("mali-fbdev: Could not get framebuffer information");
+     }
+ 
++    /* Enable double buffering */
++    vinfo.yres_virtual = vinfo.yres * 2;
++    if (ioctl(data->fb, FBIOPUT_VSCREENINFO, &vinfo) == -1) {
++	    printf("mali-fbdev: Error setting VSCREENINFO\n");
++    }
++
++    close(data->fb);
++    data->fb = -1;
++
+     ttyfd = open("/dev/tty0", O_RDWR, 0);
+     if (ttyfd >= 0) {
+         ioctl(ttyfd, KDGETMODE, &data->mode_prev);
+@@ -116,15 +125,9 @@ MALI_VideoInit(_THIS)
+         close(ttyfd);
+     }
+ 
+-    /* Enable double buffering */
+-    vinfo.yres_virtual = vinfo.yres * 2;
+-    if (ioctl(data->fb, FBIOPUT_VSCREENINFO, &vinfo) == -1) {
+-	    printf("mali-fbdev: Error setting VSCREENINFO\n");
+-    }
+-
+     data->native_display.width = vinfo.xres;
+     data->native_display.height = vinfo.yres;
+-    data->vsync_en = -1;
++    data->vsync_en = 1;
+ 
+     SDL_zero(current_mode);
+     current_mode.w = vinfo.xres;
+@@ -141,9 +144,8 @@ MALI_VideoInit(_THIS)
+     display.desktop_mode = current_mode;
+     display.current_mode = current_mode;
+     display.driverdata = data;
+-
++    
+     SDL_AddVideoDisplay(&display, SDL_FALSE);
+-    MALI_GLES_SetSwapInterval(_this, 1); // default is vsync on.
+ 
+ #ifdef SDL_INPUT_LINUXEV
+     if (SDL_EVDEV_Init() < 0) {
+@@ -206,6 +208,14 @@ MALI_CreateWindow(_THIS, SDL_Window * window)
+         return SDL_OutOfMemory();
+     }
+ 
++    // If we don't have an open framebuffer descriptor, find one.
++    if (displaydata->fb < 0) {
++        displaydata->fb = open("/dev/fb0", O_RDWR, 0);
++        if (displaydata->fb < 0) {
++            return SDL_SetError("mali-fbdev: Could not open framebuffer device");
++        }
++    }
++
+     /* Windows have one size for now */
+     window->w = displaydata->native_display.width;
+     window->h = displaydata->native_display.height;
+@@ -230,6 +240,9 @@ MALI_CreateWindow(_THIS, SDL_Window * window)
+         return SDL_SetError("mali-fbdev: Can't create EGL window surface");
+     }
+ 
++    /* Also let's enable/disable vsync as necessary */
++    MALI_GLES_SetSwapInterval(_this, displaydata->vsync_en);
++
+     /* Setup driver data for this window */
+     window->driverdata = windowdata;
+ 
+@@ -302,17 +313,19 @@ MALI_GLES_SetSwapInterval(_THIS, int interval)
+     displaydata = SDL_GetDisplayDriverData(0);
+ 
+     interval = interval > 0;
+-    if (displaydata) {
+-        if (displaydata->vsync_en != interval) {
+-            struct owlfb_sync_info sinfo;
+-            sinfo.enabled = interval;
+-            if (ioctl(displaydata->fb, OWLFB_VSYNC_EVENT_EN, &sinfo)) {
+-                printf("OWLFB_VSYNC_EVENT_EN failed\n");
+-            }
++    displaydata->vsync_en = interval;
++
++    // If we don't have the fb, we probably don't have a window either,
++    // so we'll ignore it for now and be happy we set displaydata->vsync_en,
++    // CreateWindow will call us back later.
++    if (displaydata && displaydata->fb >= 0) {
++        struct owlfb_sync_info sinfo;
++        sinfo.enabled = interval;
++        if (ioctl(displaydata->fb, OWLFB_VSYNC_EVENT_EN, &sinfo)) {
++            printf("OWLFB_VSYNC_EVENT_EN failed\n");
+         }
+ 
+         SDL_EGL_SetSwapInterval(_this, interval);
+-        displaydata->vsync_en = interval;
+     }
+ 
+     return 0;
+

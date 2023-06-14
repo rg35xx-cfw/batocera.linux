@@ -22,6 +22,9 @@ LIBRETRO_FBNEO_PLATFORM = unix-rpi3_64
 
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_BCM2711),y)
 LIBRETRO_FBNEO_PLATFORM = unix-rpi4_64
+
+else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RG35XX),y)
+LIBRETRO_FBNEO_PLATFORM = unix neon cortexa9 hardfloat
 endif
 
 ifeq ($(BR2_arm),y)

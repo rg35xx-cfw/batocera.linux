@@ -1,0 +1,22 @@
+config BR2_PACKAGE_POWERVR_SGX544_DRIVER
+	bool "powervr-sgx544-driver"
+	depends on BR2_arm
+	select BR2_PACKAGE_HAS_LIBEGL
+	select BR2_PACKAGE_HAS_LIBGLES
+	
+	help
+	  Install the binary user-space components for the PowerVR SGX544
+	  GPU. This package requires a kernel with the powervrkm 
+	  GPU Kernel Drivers enabled.
+
+if BR2_PACKAGE_POWERVR_SGX544_DRIVER
+
+config BR2_PACKAGE_PROVIDES_LIBEGL
+	default "powervr-sgx544-driver"
+
+config BR2_PACKAGE_PROVIDES_LIBGLES
+	default "powervr-sgx544-driver"
+
+endif
+
+comment "powervr-sgx544-driver"

@@ -1,0 +1,287 @@
+diff -urN ../sdl2-2.24.2/src/video/mali-fbdev/SDL_maliopengles.c ./src/video/mali-fbdev/SDL_maliopengles.c
+--- ../sdl2-2.24.2/src/video/mali-fbdev/SDL_maliopengles.c	2023-04-23 01:40:07.387720650 +0000
++++ ./src/video/mali-fbdev/SDL_maliopengles.c	2023-04-23 01:33:36.832555343 +0000
+@@ -33,8 +33,22 @@
+     return SDL_EGL_LoadLibrary(_this, path, EGL_DEFAULT_DISPLAY, 0);
+ }
+ 
++int MALI_GLES_SwapWindow(_THIS, SDL_Window * window)
++{
++    SDL_WindowData *windowdata;
++    SDL_DisplayData *displaydata;
++
++    windowdata = (SDL_WindowData*)_this->windows->driverdata;
++    displaydata = SDL_GetDisplayDriverData(0);
++
++    if (displaydata->vsync_en) {
++        long long _arg; // dummy
++        ioctl(displaydata->fb, OWLFB_WAITFORVSYNC, &_arg);
++    }
++    return SDL_EGL_SwapBuffers(_this, windowdata->egl_surface);
++}
++
+ SDL_EGL_CreateContext_impl(MALI)
+-SDL_EGL_SwapWindow_impl(MALI)
+ SDL_EGL_MakeCurrent_impl(MALI)
+ 
+ #endif /* SDL_VIDEO_DRIVER_MALI && SDL_VIDEO_OPENGL_EGL */
+diff -urN ../sdl2-2.24.2/src/video/mali-fbdev/SDL_maliopengles.h ./src/video/mali-fbdev/SDL_maliopengles.h
+--- ../sdl2-2.24.2/src/video/mali-fbdev/SDL_maliopengles.h	2023-04-23 01:40:07.387720650 +0000
++++ ./src/video/mali-fbdev/SDL_maliopengles.h	2023-04-23 01:35:42.352320945 +0000
+@@ -32,8 +32,6 @@
+ #define MALI_GLES_GetAttribute SDL_EGL_GetAttribute
+ #define MALI_GLES_GetProcAddress SDL_EGL_GetProcAddress
+ #define MALI_GLES_UnloadLibrary SDL_EGL_UnloadLibrary
+-#define MALI_GLES_SetSwapInterval SDL_EGL_SetSwapInterval
+-#define MALI_GLES_GetSwapInterval SDL_EGL_GetSwapInterval
+ #define MALI_GLES_DeleteContext SDL_EGL_DeleteContext
+ 
+ extern int MALI_GLES_LoadLibrary(_THIS, const char *path);
+diff -urN ../sdl2-2.24.2/src/video/mali-fbdev/SDL_malivideo.c ./src/video/mali-fbdev/SDL_malivideo.c
+--- ../sdl2-2.24.2/src/video/mali-fbdev/SDL_malivideo.c	2023-04-23 01:40:07.387720650 +0000
++++ ./src/video/mali-fbdev/SDL_malivideo.c	2023-04-23 01:37:54.864035818 +0000
+@@ -37,13 +37,6 @@
+ #include "SDL_malivideo.h"
+ #include "SDL_maliopengles.h"
+ 
+-
+-//static int
+-//MALI_Available(void)
+-//{
+-//    return 1;
+-//}
+-
+ static void
+ MALI_Destroy(SDL_VideoDevice * device)
+ {
+@@ -105,7 +98,6 @@
+ VideoBootStrap MALI_bootstrap = {
+     "mali",
+     "Mali EGL Video Driver",
+-//    MALI_Available,
+     MALI_Create
+ };
+ 
+@@ -119,35 +111,40 @@
+     SDL_VideoDisplay display;
+     SDL_DisplayMode current_mode;
+     SDL_DisplayData *data;
++    int ttyfd;
+     struct fb_var_screeninfo vinfo;
+-    int fd;
+ 
+     data = (SDL_DisplayData *) SDL_calloc(1, sizeof(SDL_DisplayData));
+     if (data == NULL) {
+         return SDL_OutOfMemory();
+     }
+ 
+-    fd = open("/dev/fb0", O_RDWR, 0);
+-    if (fd < 0) {
++    data->fb = open("/dev/fb0", O_RDWR, 0);
++    if (data->fb < 0) {
+         return SDL_SetError("mali-fbdev: Could not open framebuffer device");
+     }
+ 
+-    if (ioctl(fd, FBIOGET_VSCREENINFO, &vinfo) < 0) {
++    if (ioctl(data->fb, FBIOGET_VSCREENINFO, &vinfo) < 0) {
+         MALI_VideoQuit(_this);
+         return SDL_SetError("mali-fbdev: Could not get framebuffer information");
+     }
+-    /* Enable triple buffering */
+-    /*
+-    vinfo.yres_virtual = vinfo.yres * 3;
+-    if (ioctl(fd, FBIOPUT_VSCREENINFO, vinfo) == -1) {
+-	printf("mali-fbdev: Error setting VSCREENINFO\n");
++
++    ttyfd = open("/dev/tty0", O_RDWR, 0);
++    if (ttyfd >= 0) {
++        ioctl(ttyfd, KDGETMODE, &data->mode_prev);
++        ioctl(ttyfd, KDSETMODE, KD_GRAPHICS);
++        close(ttyfd);
++    }
++
++    /* Enable double buffering */
++    vinfo.yres_virtual = vinfo.yres * 2;
++    if (ioctl(data->fb, FBIOPUT_VSCREENINFO, &vinfo) == -1) {
++	    printf("mali-fbdev: Error setting VSCREENINFO\n");
+     }
+-    */
+-    close(fd);
+-//    system("setterm -cursor off");
+ 
+     data->native_display.width = vinfo.xres;
+     data->native_display.height = vinfo.yres;
++    data->vsync_en = -1;
+ 
+     SDL_zero(current_mode);
+     current_mode.w = vinfo.xres;
+@@ -166,6 +163,7 @@
+     display.driverdata = data;
+ 
+     SDL_AddVideoDisplay(&display, SDL_FALSE);
++    MALI_GLES_SetSwapInterval(_this, 1); // default is vsync on.
+ 
+ #ifdef SDL_INPUT_LINUXEV
+     if (SDL_EVDEV_Init() < 0) {
+@@ -179,12 +177,21 @@
+ void
+ MALI_VideoQuit(_THIS)
+ {
++    SDL_DisplayData *displaydata;
++    int fd;
++
++    displaydata = SDL_GetDisplayDriverData(0);
++
+     /* Clear the framebuffer and ser cursor on again */
+-//    int fd = open("/dev/tty", O_RDWR);
+-//    ioctl(fd, VT_ACTIVATE, 5);
+-//    ioctl(fd, VT_ACTIVATE, 1);
+-//    close(fd);
+-//    system("setterm -cursor on");
++    fd = open("/dev/tty0", O_RDWR);
++    ioctl(fd, KDSETMODE, displaydata->mode_prev);
++    ioctl(fd, VT_ACTIVATE, 5);
++    ioctl(fd, VT_ACTIVATE, 1);
++    close(fd);
++    if (displaydata->fb >= 0) {
++        close(displaydata->fb);
++        displaydata->fb = -1;
++    }
+ 
+ #ifdef SDL_INPUT_LINUXEV
+     SDL_EVDEV_Quit();
+@@ -232,6 +239,10 @@
+         }
+     }
+     windowdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType) &displaydata->native_display);
++    if (windowdata->egl_surface == EGL_NO_SURFACE) {
++        // Try again if the driver refuses our native_display as being fbdev_window
++        windowdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType)NULL);
++    }
+ 
+     if (windowdata->egl_surface == EGL_NO_SURFACE) {
+         MALI_VideoQuit(_this);
+@@ -253,8 +264,18 @@
+ MALI_DestroyWindow(_THIS, SDL_Window * window)
+ {
+     SDL_WindowData *data;
++    SDL_DisplayData *displaydata;
++
++    displaydata = SDL_GetDisplayDriverData(0);
+ 
+     data = window->driverdata;
++    if (displaydata) {
++        if (displaydata->fb >= 0) {
++            close(displaydata->fb);
++            displaydata->fb  = -1;
++        }
++    }
++
+     if (data) {
+         if (data->egl_surface != EGL_NO_SURFACE) {
+             SDL_EGL_DestroySurface(_this, data->egl_surface);
+@@ -290,6 +311,43 @@
+ {
+ }
+ 
++int
++MALI_GLES_SetSwapInterval(_THIS, int interval)
++{
++    SDL_DisplayData *displaydata;
++
++    displaydata = SDL_GetDisplayDriverData(0);
++
++    interval = interval > 0;
++    if (displaydata) {
++        if (displaydata->vsync_en != interval) {
++            struct owlfb_sync_info sinfo;
++            sinfo.enabled = interval;
++            if (ioctl(displaydata->fb, OWLFB_VSYNC_EVENT_EN, &sinfo)) {
++                printf("OWLFB_VSYNC_EVENT_EN failed\n");
++            }
++        }
++
++        SDL_EGL_SetSwapInterval(_this, interval);
++        displaydata->vsync_en = interval;
++    }
++
++    return 0;
++}
++
++int
++MALI_GLES_GetSwapInterval(_THIS)
++{
++    SDL_DisplayData *displaydata;
++    displaydata = SDL_GetDisplayDriverData(0);
++
++    if (displaydata) {
++        return displaydata->vsync_en;
++    }
++
++    return 1;
++}
++
+ /*****************************************************************************/
+ /* SDL Window Manager function                                               */
+ /*****************************************************************************/
+diff -urN ../sdl2-2.24.2/src/video/mali-fbdev/SDL_malivideo.h ./src/video/mali-fbdev/SDL_malivideo.h
+--- ../sdl2-2.24.2/src/video/mali-fbdev/SDL_malivideo.h	2023-04-23 01:40:07.387720650 +0000
++++ ./src/video/mali-fbdev/SDL_malivideo.h	2023-04-23 01:39:00.471883075 +0000
+@@ -31,18 +31,26 @@
+ #include <linux/vt.h>
+ #include <linux/fb.h>
+ #include <sys/types.h>
++#include <linux/kd.h>
+ #include <sys/stat.h>
++#include <sys/ioctl.h>
+ #include <fcntl.h>
+-#include <stropts.h>
+ #include <unistd.h>
+ #include <stdlib.h>
+ 
++typedef struct fbdev_window
++{
++    unsigned short width;
++    unsigned short height;
++} fbdev_window;
++
++
+ typedef struct SDL_DisplayData
+ {
+-    struct {
+-        unsigned short width;
+-        unsigned short height;
+-    } native_display;
++    struct fbdev_window native_display;
++    int fb;
++    int vsync_en;
++    int mode_prev;
+ } SDL_DisplayData;
+ 
+ typedef struct SDL_WindowData
+@@ -50,6 +58,16 @@
+     EGLSurface egl_surface;
+ } SDL_WindowData;
+ 
++struct owlfb_sync_info {
++    __u8 enabled;
++    __u8 disp_id;
++    __u16 reserved2;
++};
++
++#define OWL_IOW(num, dtype)    _IOW('O', num, dtype)
++#define OWLFB_WAITFORVSYNC            OWL_IOW(57,long long)
++#define OWLFB_VSYNC_EVENT_EN          OWL_IOW(67, struct owlfb_sync_info)
++
+ /****************************************************************************/
+ /* SDL_VideoDevice functions declaration                                    */
+ /****************************************************************************/
+@@ -68,6 +86,8 @@
+ void MALI_DestroyWindow(_THIS, SDL_Window * window);
+ 
+ /* Window manager function */
++int MALI_GLES_SetSwapInterval(_THIS, int interval);
++int MALI_GLES_GetSwapInterval(_THIS);
+ SDL_bool MALI_GetWindowWMInfo(_THIS, SDL_Window * window,
+                              struct SDL_SysWMinfo *info);
+ 

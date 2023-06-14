@@ -1,0 +1,8 @@
+#!/bin/sh
+
+mkdir /var/run/evmapy
+touch /var/run/evmapy/ready
+cp /usr/share/evmapy/simplemenu.keys /var/run/evmapy/event1.json
+evmapy &
+
+
