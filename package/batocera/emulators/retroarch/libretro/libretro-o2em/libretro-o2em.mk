@@ -26,6 +26,9 @@ LIBRETRO_O2EM_PLATFORM = rpi4_64
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S812),y)
 LIBRETRO_O2EM_PLATFORM = armv neon
 
+else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RG35XX),y)
+LIBRETRO_O2EM_PLATFORM = armv neon hardfloat cortexa9
+
 else ifeq ($(BR2_aarch64),y)
 LIBRETRO_O2EM_PLATFORM = unix
 endif
