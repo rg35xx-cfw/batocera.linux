@@ -2,6 +2,7 @@
 
 BOOTCONF="/boot/batocera-boot.conf"
 REBOOT_FLAG=/var/run/emulationstation-standalone
+log="/userdata/system/logs/display.log"
 
 if test "$1" = "--stop-rebooting"
 then
@@ -58,9 +59,9 @@ do
     if test -n "${effective_output}" && test -n "${display_rotate}"
     then
         if batocera-resolution supportSystemRotation
-	then
+        then
             batocera-resolution setRotation "${display_rotate}"
-	else
+        else
             # when no rotation is available by the system, apply it
             EXTRA_OPTS="--screenrotate ${display_rotate}"
         fi
@@ -68,7 +69,7 @@ do
     ###################
 
     ### resolution ###
-    bootresolution="$(batocera-settings-get -f "$BOOTCONF" es.resolution)"
+    bootresolution="$(batocera-settings-get-master -f "$BOOTCONF" es.resolution)"
     if test -z "${bootresolution}"
     then
 	    batocera-resolution minTomaxResolution-secure
@@ -109,20 +110,15 @@ do
         setxkbmap "${map_name}"
         fi
         ###################
-
-        # try to force 60hz (specific to xorg)
-        FRAMERATE="$(/usr/bin/batocera-settings-get es.framerate)"
-        test -z "${FRAMERATE}" && FRAMERATE=60
-        which xrandr && xrandr -r "${FRAMERATE}"
-        ###################
-
-        forcedresolution="$(/usr/bin/batocera-settings-get -f /boot/batocera-boot.conf es.forcedresolution)"
+                
+        forcedresolution="$(/usr/bin/batocera-settings-get -f $BOOTCONF es.forcedresolution)"
         if test -n "${forcedresolution}"
         then
             batocera-resolution forceMode "${forcedresolution}"
         fi
 
         # Multitouch for touch screens
+        TOUCHSCREEN=$(xinput | grep pointer | tail -n +2 | grep -Ei 'touchscreen|2808:1015' | sed -E 's/[^a-zA-Z0-9]*((\S+ ?)+[a-zA-Z0-9\(\)]+)\s*id=([0-9]+)\s*(.*)/"\1"/')
         if ! test -z "${TOUCHSCREEN}"
         then
             killall -9 touchegg
@@ -148,7 +144,7 @@ do
         # xrandr -s 640x480 -r 60
         #####################
 
-        test -x /userdata/system/custom-es-config && /userdata/system/custom-es-config
+        test -e /userdata/system/custom-es-config && bash /userdata/system/custom-es-config &
         ###################
     fi
 
@@ -162,6 +158,9 @@ do
 
     # save the current output in which es is started (used to switch screen, when unplugged)
     batocera-resolution currentOutput > "/var/run/switch_screen_current"
+
+    # dbus launch is required for the gio/gvfs/trash:///...
+    eval "$(dbus-launch --sh-syntax --exit-with-session)"
 
     cd /userdata # es need a PWD
     %BATOCERA_EMULATIONSTATION_PREFIX% emulationstation ${GAMELAUNCHOPT} --exit-on-reboot-required %BATOCERA_EMULATIONSTATION_ARGS% ${CUSTOMESOPTIONS}

@@ -92,6 +92,9 @@ atomiswave:
 bbc:
   emulator: libretro
   core:     mame
+boom3:
+  emulator: libretro
+  core:     boom3
 c64:
   emulator: libretro
   core:     vice_x64
@@ -117,8 +120,8 @@ cave3rd:
   emulator: demul
   core:     demul
 cdi:
-  emulator: libretro
-  core:     same_cdi
+  emulator: mame
+  core:     mame
 cdogs:
   emulator: cdogs
   core:     cdogs
@@ -134,6 +137,11 @@ coco:
 colecovision:
   emulator: libretro
   core:     bluemsx
+corsixth:
+  emulator: corsixth
+  core:     corsixth
+  options:
+    hud_support: false
 crvision:
   emulator: libretro
   core:     mame
@@ -244,9 +252,19 @@ gx4000:
 gzdoom:
   emulator: gzdoom
   core:     gzdoom
+hcl:
+  emulator: hcl
+  core:     hcl
+  options:
+    bezel: none
 hikaru:
   emulator: demul
   core:     demul
+hurrican:
+  emulator: hurrican
+  core:     hurrican
+  options:
+    bezel: none
 ikemen:
   emulator: ikemen
   core:     ikemen
@@ -255,6 +273,9 @@ ikemen:
 intellivision:
   emulator: libretro
   core:     freeintv
+iortcw:
+  emulator: iortcw
+  core:     iortcw
 jaguar:
   emulator: libretro
   core:     virtualjaguar
@@ -296,7 +317,7 @@ megadrive:
   core:     genesisplusgx
 megaduck:
   emulator: libretro
-  core:     mame
+  core:     sameduck
 model2:
   emulator: model2emu
   core:     model2emu
@@ -344,6 +365,9 @@ n64:
 n64dd:
   emulator: mupen64plus
   core:     glide64mk2
+namco2x6:
+  emulator: play
+  core:     play
 naomi:
   emulator: libretro
   core:     flycast
@@ -362,6 +386,9 @@ neogeocd:
 nes:
   emulator: libretro
   core:     fceumm
+ngage:
+  emulator: eka2l1
+  core:     eka2l1
 ngp:
   emulator: libretro
   core:     mednafen_ngp
@@ -382,6 +409,14 @@ openbor:
   options:
     # none because some games fails by default with textures (street of rage 2x)
     bezel: none
+openjazz:
+  emulator: openjazz
+  core:     openjazz
+openlara:
+  emulator: libretro
+  core:     openlara
+  options:
+    gfxbackend: gl
 
 # P-S
 
@@ -406,6 +441,9 @@ pdp1:
 pet:
   emulator: vice
   core:     xpet
+pico:
+  emulator: libretro
+  core:     genesisplusgx
 pico8:
   emulator: libretro
   core:     fake08
@@ -449,6 +487,9 @@ pygame:
 pyxel:
   emulator: pyxel
   core:     pyxel
+quake3:
+  emulator: ioquake3
+  core:     ioquake3
 raze:
   emulator: raze
   core:     raze
@@ -496,6 +537,9 @@ solarus:
 sonicretro:
   emulator: sonic2013
   core:     sonic2013
+spectravideo:
+  emulator: openmsx
+  core:     openmsx
 steam:
   emulator: steam
   core:     steam
@@ -528,6 +572,14 @@ switch:
 
 # T-Z
 
+theforceengine:
+  emulator: theforceengine
+  core:     theforceengine
+thextech:
+  emulator: thextech
+  core:     thextech
+  options:
+    bezel: none
 thomson:
   emulator: libretro
   core:     theodore
@@ -543,6 +595,9 @@ triforce:
 tutor:
   emulator: libretro
   core:     mame
+tyrian:
+  emulator: tyrian
+  core:     tyrian
 tyrquake:
   emulator: libretro
   core:     tyrquake
@@ -564,6 +619,9 @@ videopacplus:
 virtualboy:
   emulator: libretro
   core:     vb
+vis:
+  emulator: libretro
+  core:     mame
 vitaquake2:
   emulator: libretro
   core:     vitaquake2
@@ -631,3 +689,6 @@ zx81:
 zxspectrum:
   emulator: libretro
   core:     fuse
+vpinball:
+  emulator: vpinball
+  core:     vpinball

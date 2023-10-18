@@ -15,6 +15,7 @@ ROMS = '/userdata/roms'
 esInputs = CONF + '/emulationstation/es_input.cfg'
 esSettings = CONF + '/emulationstation/es_settings.cfg'
 esGunsMetadata = "/usr/share/emulationstation/resources/gungames.xml"
+esWheelsMetadata = "/usr/share/emulationstation/resources/wheelgames.xml"
 batoceraConf = HOME + '/batocera.conf'
 logdir = HOME + '/logs/'
 
@@ -39,6 +40,7 @@ batoceraBins = {'dosbox'         : '/usr/bin/dosbox'
               , 'tsugaru'        : '/usr/bin/Tsugaru_CUI'
               , 'xemu'           : '/usr/bin/xemu'
               , 'gsplus'         : '/usr/bin/GSplus'
+              , 'applewin'       : '/usr/bin/applewin'
               , 'fba2x'          : '/usr/bin/fba2x'
 }
 

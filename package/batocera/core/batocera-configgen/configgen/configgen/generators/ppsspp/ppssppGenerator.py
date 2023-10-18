@@ -14,7 +14,7 @@ class PPSSPPGenerator(Generator):
 
     # Main entry of the module
     # Configure fba and return a command
-    def generate(self, system, rom, playersControllers, guns, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, wheels, gameResolution):
         ppssppConfig.writePPSSPPConfig(system)
 
         # Remove the old gamecontrollerdb.txt file
@@ -43,7 +43,7 @@ class PPSSPPGenerator(Generator):
 
         # state_slot option
         if system.isOptSet('state_filename'):
-            commandArray.extend(["--state", "/userdata/saves/psp/{}".format(system.config['state_filename'])])
+            commandArray.append("--state={}".format(system.config['state_filename']))
 
         # The next line is a reminder on how to quit PPSSPP with just the HK
         #commandArray = ['/usr/bin/PPSSPP'], rom, "--escape-exit"]

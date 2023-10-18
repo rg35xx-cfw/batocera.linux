@@ -7,25 +7,33 @@ import shutil
 import os
 from os import environ
 import configparser
+import controllersConfig
 
 class CitraGenerator(Generator):
 
     # Main entry of the module
-    def generate(self, system, rom, playersControllers, guns, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, wheels, gameResolution):
         CitraGenerator.writeCITRAConfig(batoceraFiles.CONF + "/citra-emu/qt-config.ini", system, playersControllers)
 
         commandArray = ['/usr/bin/citra-qt', rom]
-        return Command.Command(array=commandArray, env={ \
-        "XDG_CONFIG_HOME":batoceraFiles.CONF, \
-        "XDG_DATA_HOME":batoceraFiles.SAVES + "/3ds", \
-        "XDG_CACHE_HOME":batoceraFiles.CACHE, \
-        "XDG_RUNTIME_DIR":batoceraFiles.SAVES + "/3ds/citra-emu", \
-        "QT_QPA_PLATFORM":"xcb"})
+        return Command.Command(array=commandArray, env={ 
+            "XDG_CONFIG_HOME":batoceraFiles.CONF,
+            "XDG_DATA_HOME":batoceraFiles.SAVES + "/3ds",
+            "XDG_CACHE_HOME":batoceraFiles.CACHE,
+            "XDG_RUNTIME_DIR":batoceraFiles.SAVES + "/3ds/citra-emu",
+            "QT_QPA_PLATFORM":"xcb",
+            "SDL_GAMECONTROLLERCONFIG": controllersConfig.generateSdlGameControllerConfig(playersControllers),
+            "SDL_JOYSTICK_HIDAPI": "0"
+            }
+        )
 
     # Show mouse on screen
     def getMouseMode(self, config):
-        return True
-
+        if "citra_screen_layout" in config and config["citra_screen_layout"] == "1-false":
+            return False
+        else:
+            return True
+    
     @staticmethod
     def writeCITRAConfig(citraConfigFile, system, playersControllers):
         # Pads
@@ -70,7 +78,7 @@ class CitraGenerator(Generator):
             citraConfig.set("Layout", "layout_option", tab[0])
         else:
             citraConfig.set("Layout", "swap_screen", "false")
-            citraConfig.set("Layout", "layout_option", "2")
+            citraConfig.set("Layout", "layout_option", "0")
         citraConfig.set("Layout", "swap_screen\default", "false")
         citraConfig.set("Layout", "layout_option\default", "false")
 
@@ -128,6 +136,11 @@ class CitraGenerator(Generator):
         citraConfig.set("Renderer", "use_hw_renderer", "true")
         citraConfig.set("Renderer", "use_hw_shader",   "true")
         citraConfig.set("Renderer", "use_shader_jit",  "true")
+        # Software, OpenGL (default) or Vulkan
+        if system.isOptSet('citra_graphics_api'):
+            citraConfig.set("Renderer", "graphics_api", system.config["citra_graphics_api"])
+        else:
+            citraConfig.set("Renderer", "graphics_api", "1")
         # Use VSYNC
         if system.isOptSet('citra_use_vsync_new') and system.config["citra_use_vsync_new"] == '0':
             citraConfig.set("Renderer", "use_vsync_new", "false")
@@ -140,7 +153,12 @@ class CitraGenerator(Generator):
         else:
             citraConfig.set("Renderer", "resolution_factor", "1")
         citraConfig.set("Renderer", "resolution_factor\default", "false")
-
+        # Async Shader Compilation
+        if system.isOptSet('citra_async_shader_compilation') and system.config["citra_async_shader_compilation"] == '1':
+            citraConfig.set("Renderer", "async_shader_compilation", "true")
+        else:
+            citraConfig.set("Renderer", "async_shader_compilation", "false")
+        citraConfig.set("Renderer", "async_shader_compilation\default", "false")
         # Use Frame Limit
         if system.isOptSet('citra_use_frame_limit') and system.config["citra_use_frame_limit"] == '0':
             citraConfig.set("Renderer", "use_frame_limit", "false")

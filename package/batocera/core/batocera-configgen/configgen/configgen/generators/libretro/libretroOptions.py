@@ -619,36 +619,40 @@ def generateCoreSettings(coreSettings, system, rom, guns):
     # Dolpin Wii
     if (system.config['core'] == 'dolphin'):
         # Wii System Languages
-            if system.isOptSet('wii_language'):
-                coreSettings.save('dolphin_language', '"' + system.config['wii_language'] + '"')
-            else:
-                coreSettings.save('dolphin_language', '"French"')
+        if system.isOptSet('wii_language'):
+            coreSettings.save('dolphin_language', '"' + system.config['wii_language'] + '"')
+        else:
+            coreSettings.save('dolphin_language', '"English"')
         # Wii Resolution Scale
-            if system.isOptSet('wii_resolution'):
-                coreSettings.save('dolphin_efb_scale', '"' + system.config['wii_resolution'] + '"')
-            else:
-                coreSettings.save('dolphin_efb_scale', '"x1 (640 x 528)"')
+        if system.isOptSet('wii_resolution'):
+            coreSettings.save('dolphin_efb_scale', '"' + system.config['wii_resolution'] + '"')
+        else:
+            coreSettings.save('dolphin_efb_scale', '"x1 (640 x 528)"')
         # Anisotropic Filtering
-            if system.isOptSet('wii_anisotropic'):
-                coreSettings.save('dolphin_max_anisotropy', '"' + system.config['wii_anisotropic'] + '"')
-            else:
-                coreSettings.save('dolphin_max_anisotropy', '"x1"')
+        if system.isOptSet('wii_anisotropic'):
+            coreSettings.save('dolphin_max_anisotropy', '"' + system.config['wii_anisotropic'] + '"')
+        else:
+            coreSettings.save('dolphin_max_anisotropy', '"x1"')
         # Wii Tv Mode
-            if system.isOptSet('wii_widescreen'):
-                coreSettings.save('dolphin_widescreen', '"' + system.config['wii_widescreen'] + '"')
-            else:
-                coreSettings.save('dolphin_widescreen', '"enabled"')
+        if system.isOptSet('wii_widescreen'):
+            coreSettings.save('dolphin_widescreen', '"' + system.config['wii_widescreen'] + '"')
+        else:
+            coreSettings.save('dolphin_widescreen', '"enabled"')
         # Widescreen Hack
-            if system.isOptSet('wii_widescreen_hack'):
-                coreSettings.save('dolphin_widescreen_hack', '"' + system.config['wii_widescreen_hack'] + '"')
-            else:
-                coreSettings.save('dolphin_widescreen_hack', '"disabled"')
+        if system.isOptSet('wii_widescreen_hack'):
+            coreSettings.save('dolphin_widescreen_hack', '"' + system.config['wii_widescreen_hack'] + '"')
+        else:
+            coreSettings.save('dolphin_widescreen_hack', '"disabled"')
         # Shader Compilation Mode
-            if system.isOptSet('wii_shader_mode'):
-                coreSettings.save('dolphin_shader_compilation_mode', '"' + system.config['wii_shader_mode'] + '"')
-            else:
-                coreSettings.save('dolphin_shader_compilation_mode', '"sync"')
-
+        if system.isOptSet('wii_shader_mode'):
+            coreSettings.save('dolphin_shader_compilation_mode', '"' + system.config['wii_shader_mode'] + '"')
+        else:
+            coreSettings.save('dolphin_shader_compilation_mode', '"sync"')
+        # OSD
+        if system.isOptSet('wii_osd'):
+            coreSettings.save('dolphin_osd_enabled', '"' + system.config['wii_osd'] + '"')
+        else:
+            coreSettings.save('dolphin_osd_enabled', '"enabled"')
     # Magnavox - Odyssey2 / Phillips Videopac+
     if (system.config['core'] == 'o2em'):
         # Virtual keyboard transparency
@@ -877,6 +881,21 @@ def generateCoreSettings(coreSettings, system, rom, guns):
             coreSettings.save('dosbox_pure_joystick_timed', '"' + system.config['pure_joystick_timed'] + '"')
         else:
             coreSettings.save('dosbox_pure_joystick_timed', '"true"')
+        # SoundBlaster Type
+        if system.isOptSet('pure_sblaster_type'):
+            coreSettings.save('dosbox_pure_sblaster_type', '"' + system.config['pure_sblaster_type'] + '"')
+        else:
+            coreSettings.save('dosbox_pure_sblaster_type', '"sb16"')
+        # Enable Gravis Sound
+        if system.isOptSet("pure_gravis"):
+            coreSettings.save("dosbox_pure_gus", '"' + system.config['pure_gravis'] + '"')
+        else:
+            coreSettings.save("dosbox_pure_gus", '"false"')
+        # Midi Type
+        if system.isOptSet('pure_midi'):
+            coreSettings.save('dosbox_pure_midi', '"' + system.config['pure_midi'] + '"')
+        else:
+            coreSettings.save('dosbox_pure_midi', '"disabled"')
 
     # Microsoft MSX and Colecovision
     if (system.config['core'] == 'bluemsx'):
@@ -1114,6 +1133,15 @@ def generateCoreSettings(coreSettings, system, rom, guns):
         coreSettings.save('parallel-n64-64dd-hardware', '"disabled"')
         coreSettings.save('parallel-n64-boot-device',   '"Default"')
 
+        # Graphics Plugin
+        if system.isOptSet('parallel-n64-gfxplugin'):
+            coreSettings.save('parallel-n64-gfxplugin', '"' + system.config['parallel-n64-gfxplugin'] + '"')
+        else:
+            # vulkan doesn't work with auto
+            if system.isOptSet('gfxbackend') and system.config['gfxbackend'] == "vulkan":
+                coreSettings.save('parallel-n64-gfxplugin', '"parallel"')
+            else:
+                coreSettings.save('parallel-n64-gfxplugin', '"auto"')
         # Video Resolution
         if system.isOptSet('parallel-n64-screensize'):
             coreSettings.save('parallel-n64-screensize', '"' + system.config['parallel-n64-screensize'] + '"')
@@ -1424,17 +1452,25 @@ def generateCoreSettings(coreSettings, system, rom, guns):
             coreSettings.save('nestopia_nospritelimit', '"enabled"')
         # Crop Overscan
         if system.isOptSet('nestopia_cropoverscan') and system.config['nestopia_cropoverscan'] == "none":
-            coreSettings.save('nestopia_overscan_h',    '"disabled"')
-            coreSettings.save('nestopia_overscan_v',    '"disabled"')
+            coreSettings.save('nestopia_overscan_h_left', '"0"')
+            coreSettings.save('nestopia_overscan_h_right', '"0"')
+            coreSettings.save('nestopia_overscan_v_top', '"0"')
+            coreSettings.save('nestopia_overscan_v_bottom', '"0"')
         elif system.isOptSet('nestopia_cropoverscan') and system.config['nestopia_cropoverscan'] == "h":
-            coreSettings.save('nestopia_overscan_h',    '"enabled"')
-            coreSettings.save('nestopia_overscan_v',    '"disabled"')
-        elif system.isOptSet('nestopia_cropoverscan') and system.config['nestopia_cropoverscan'] == "v":
-            coreSettings.save('nestopia_overscan_h',    '"disabled"')
-            coreSettings.save('nestopia_overscan_v',    '"enabled"')
+            coreSettings.save('nestopia_overscan_h_left', '"8"')
+            coreSettings.save('nestopia_overscan_h_right', '"8"')
+            coreSettings.save('nestopia_overscan_v_top', '"0"')
+            coreSettings.save('nestopia_overscan_v_bottom', '"0"')
+        elif system.isOptSet('nestopia_cropoverscan') and system.config['nestopia_cropoverscan'] == "both":
+            coreSettings.save('nestopia_overscan_h_left', '"8"')
+            coreSettings.save('nestopia_overscan_h_right', '"8"')
+            coreSettings.save('nestopia_overscan_v_top', '"8"')
+            coreSettings.save('nestopia_overscan_v_bottom', '"8"')
         else:
-            coreSettings.save('nestopia_overscan_h',    '"enabled"')
-            coreSettings.save('nestopia_overscan_v',    '"enabled"')
+            coreSettings.save('nestopia_overscan_h_left', '"0"')
+            coreSettings.save('nestopia_overscan_h_right', '"0"')
+            coreSettings.save('nestopia_overscan_v_top', '"8"')
+            coreSettings.save('nestopia_overscan_v_bottom', '"8"')
         # Palette Choice
         if system.isOptSet('nestopia_palette'):
             coreSettings.save('nestopia_palette', '"' + system.config['nestopia_palette'] + '"')
@@ -1481,17 +1517,25 @@ def generateCoreSettings(coreSettings, system, rom, guns):
             coreSettings.save('fceumm_nospritelimit', '"enabled"')
         # Crop Overscan
         if system.isOptSet('fceumm_cropoverscan') and system.config['fceumm_cropoverscan'] == "none":
-            coreSettings.save('fceumm_overscan_h',    '"disabled"')
-            coreSettings.save('fceumm_overscan_v',    '"disabled"')
+            coreSettings.save('fceumm_overscan_h_left', '"0"')
+            coreSettings.save('fceumm_overscan_h_right', '"0"')
+            coreSettings.save('fceumm_overscan_v_top', '"0"')
+            coreSettings.save('fceumm_overscan_v_bottom', '"0"')
         elif system.isOptSet('fceumm_cropoverscan') and system.config['fceumm_cropoverscan'] == "h":
-            coreSettings.save('fceumm_overscan_h',    '"enabled"')
-            coreSettings.save('fceumm_overscan_v',    '"disabled"')
-        elif system.isOptSet('fceumm_cropoverscan') and system.config['fceumm_cropoverscan'] == "v":
-            coreSettings.save('fceumm_overscan_h',    '"disabled"')
-            coreSettings.save('fceumm_overscan_v',    '"enabled"')
+            coreSettings.save('fceumm_overscan_h_left', '"8"')
+            coreSettings.save('fceumm_overscan_h_right', '"8"')
+            coreSettings.save('fceumm_overscan_v_top', '"0"')
+            coreSettings.save('fceumm_overscan_v_bottom', '"0"')
+        elif system.isOptSet('fceumm_cropoverscan') and system.config['fceumm_cropoverscan'] == "both":
+            coreSettings.save('fceumm_overscan_h_left', '"8"')
+            coreSettings.save('fceumm_overscan_h_right', '"8"')
+            coreSettings.save('fceumm_overscan_v_top', '"8"')
+            coreSettings.save('fceumm_overscan_v_bottom', '"8"')
         else:
-            coreSettings.save('fceumm_overscan_h',    '"enabled"')
-            coreSettings.save('fceumm_overscan_v',    '"enabled"')
+            coreSettings.save('fceumm_overscan_h_left', '"0"')
+            coreSettings.save('fceumm_overscan_h_right', '"0"')
+            coreSettings.save('fceumm_overscan_v_top', '"8"')
+            coreSettings.save('fceumm_overscan_v_bottom', '"8"')
         # Palette Choice
         if system.isOptSet('fceumm_palette'):
             coreSettings.save('fceumm_palette', '"' + system.config['fceumm_palette'] + '"')
@@ -1604,6 +1648,12 @@ def generateCoreSettings(coreSettings, system, rom, guns):
             coreSettings.save('snes9x_hires_blend', '"' + system.config['hires_blend'] + '"')
         else:
             coreSettings.save('snes9x_hires_blend', '"disabled"')
+        # Blargg NTSC Filter
+        if system.isOptSet('snes9x_blargg_filter'):
+            coreSettings.save('snes9x_blargg', '"' + system.config['snes9x_blargg_filter'] + '"')
+        else:
+            coreSettings.save('snes9x_blargg', '"disabled"')
+        # Crosshair
         if system.isOptSet('superscope_crosshair'):
             coreSettings.save('snes9x_superscope_crosshair', '"' + system.config['superscope_crosshair'] + '"')
         else:
@@ -1631,6 +1681,12 @@ def generateCoreSettings(coreSettings, system, rom, guns):
             coreSettings.save('snes9x_2010_overclock', '"' + system.config['2010_overclock_superfx'] + '"')
         else:
             coreSettings.save('snes9x_2010_overclock', '"10 MHz (Default)"')
+        # Blargg NTSC Filter
+        if system.isOptSet('snes9x_2010_blargg_filter'):
+            coreSettings.save('snes9x_2010_blargg', '"' + system.config['snes9x_2010_blargg_filter'] + '"')
+        else:
+            coreSettings.save('snes9x_2010_blargg', '"disabled"')
+        # Crosshair
         if system.isOptSet('superscope_crosshair'):
             coreSettings.save('snes9x_2010_superscope_crosshair', '"' + system.config['superscope_crosshair'] + '"')
         else:
@@ -1644,6 +1700,11 @@ def generateCoreSettings(coreSettings, system, rom, guns):
     if (system.config['core'] == 'bsnes'):
         if system.isOptSet('use_guns') and system.getOptBoolean('use_guns') and len(guns) >= 1:
             coreSettings.save('bsnes_touchscreen_lightgun_superscope_reverse', '"OFF"')
+        # Video Filters
+        if system.isOptSet('bsnes_video_filter'):
+            coreSettings.save('bsnes_video_filter', '"' + system.config['bsnes_video_filter'] + '"')
+        else:
+            coreSettings.save('bsnes_video_filter', '"disabled"')
 
     # Nintendo SNES/GB/GBC/SGB
     if (system.config['core'] == 'mesen-s'):
@@ -2013,7 +2074,12 @@ def generateCoreSettings(coreSettings, system, rom, guns):
         else:
             coreSettings.save('yabasanshiro_multitap_port1', '"disabled"')
             coreSettings.save('yabasanshiro_multitap_port2', '"disabled"')
-
+        # Language
+        if system.isOptSet('yabasanshiro_language'):
+            coreSettings.save('yabasanshiro_system_language', '"' + system.config['yabasanshiro_language'] + '"')
+        else:
+            coreSettings.save('yabasanshiro_system_language', '"english"')
+    
     if (system.config['core'] == 'kronos'):
         # Share saves with Beetle
         if system.isOptSet('kronos_use_beetle_saves') and system.config['kronos_use_beetle_saves'] == 'disabled':
@@ -2181,6 +2247,13 @@ def generateCoreSettings(coreSettings, system, rom, guns):
             coreSettings.save('neocd_per_content_saves', '"Off"')
         else:
             coreSettings.save('neocd_per_content_saves', '"On"')
+    
+    # Sony PSP
+    if (system.config['core'] == 'ppsspp'):
+        if system.isOptSet('ppsspp_resolution'):
+            coreSettings.save('ppsspp_internal_resolution', '"' + system.config['ppsspp_resolution'] + '"')
+        else:
+            coreSettings.save('ppsspp_internal_resolution', '"480x272"')
 
     # Sony PSX
     if (system.config['core'] == 'mednafen_psx'):
@@ -2396,6 +2469,62 @@ def generateCoreSettings(coreSettings, system, rom, guns):
             coreSettings.save('mrboom-nomonster', '"' + system.config['mrboom-nomonster'] + '"')
         else:
             coreSettings.save('mrboom-nomonster', '"ON"')
+    
+    # OpenLara
+    if (system.config['core'] == 'openlara'):
+        # Internal resolution
+        if system.isOptSet('lara-resolution'):
+            coreSettings.save('openlara_resolution', '"' + system.config['lara-resolution'] + '"')
+        else:
+            coreSettings.save('openlara_resolution', '"1280x720"')
+                
+        # Framerate
+        if system.isOptSet('lara-framerate'):
+            coreSettings.save('openlara_framerate', '"' + system.config['lara-framerate'] + '"')
+        else:
+            coreSettings.save('openlara_framerate', '"60fps"')
+    
+    # HatariB
+    if (system.config['core'] == 'hatarib'):
+        # Defaults
+        coreSettings.save('hatarib_statusbar', '"0"')
+        coreSettings.save('hatarib_fast_floppy', '"1"')
+        coreSettings.save('hatarib_show_welcome', '"0"')
+        # Machine Type
+        if system.isOptSet('hatarib_machine'):
+            coreSettings.save('hatarib_machine', '"' + system.config['hatarib_machine'] + '"')
+        else:
+            coreSettings.save('hatarib_machine', '"0"')
+        # CPU
+        if system.isOptSet('hatarib_cpu'):
+            coreSettings.save('hatarib_cpu', '"' + system.config['hatarib_cpu'] + '"')
+        else:
+            coreSettings.save('hatarib_cpu', '"-1"')
+        # CPU Clock
+        if system.isOptSet('hatarib_cpu_clock'):
+            coreSettings.save('hatarib_cpu_clock', '"' + system.config['hatarib_cpu'] + '"')
+        else:
+            coreSettings.save('hatarib_cpu_clock', '"-1"')
+        # ST Memory Size
+        if system.isOptSet('hatarib_memory'):
+            coreSettings.save('hatarib_memory', '"' + system.config['hatarib_memory'] + '"')
+        else:
+            coreSettings.save('hatarib_memory', '"0"')
+        # Pause Screen
+        if system.isOptSet('hatarib_pause'):
+            coreSettings.save('hatarib_pause_osk', '"' + system.config['hatarib_pause'] + '"')
+        else:
+            coreSettings.save('hatarib_pause_osk', '"2"')
+        # Aspect Ratio
+        if system.isOptSet('hatarib_ratio'):
+            coreSettings.save('hatarib_aspect', '"' + system.config['hatarib_ratio'] + '"')
+        else:
+            coreSettings.save('hatarib_aspect', '"0"')
+        # Borders
+        if system.isOptSet('hatarib_borders'):
+            coreSettings.save('hatarib_borders', '"' + system.config['hatarib_borders'] + '"')
+        else:
+            coreSettings.save('hatarib_borders', '"0"')
     
     # Custom : Allow the user to configure directly retroarchcore.cfg via batocera.conf via lines like : snes.retroarchcore.opt=val
     for user_config in system.config:

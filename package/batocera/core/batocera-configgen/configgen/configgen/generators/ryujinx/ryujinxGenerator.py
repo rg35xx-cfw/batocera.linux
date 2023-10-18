@@ -76,7 +76,7 @@ ryujinxCtrl = {
 
 class RyujinxGenerator(Generator):
 
-    def generate(self, system, rom, playersControllers, guns, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, wheels, gameResolution):
         if not os.path.exists(ryujinxConf):
             os.makedirs(ryujinxConf)
         if not os.path.exists(ryujinxConf + "/system"):
@@ -107,6 +107,8 @@ class RyujinxGenerator(Generator):
         conf["game_dirs"] = ["/userdata/roms/switch"]
         conf["start_fullscreen"] = True
         conf["docked_mode"] = True
+        conf["audio_backend"] = "OpenAl"
+        conf["audio_volume"] = 1
         # set ryujinx app language
         conf["language_code"] = str(getLangFromEnvironment())
 

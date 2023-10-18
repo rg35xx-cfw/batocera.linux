@@ -4,19 +4,24 @@
 #
 ################################################################################
 
-ALLLINUXFIRMWARES_VERSION = 20230515
+ALLLINUXFIRMWARES_VERSION = 20230919
 ALLLINUXFIRMWARES_SOURCE = linux-firmware-$(ALLLINUXFIRMWARES_VERSION).tar.gz
 ALLLINUXFIRMWARES_SITE = https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/snapshot
 
 # exclude some dirs not required on batocera
-ALLLINUXFIRMWARES_REMOVE_DIRS = $(@D)/liquidio $(@D)/netronome
+ALLLINUXFIRMWARES_REMOVE_DIRS = $(@D)/liquidio $(@D)/netronome $(@D)/mellanox $(@D)/dpaa2 $(@D)/bnx2x $(@D)/cxgb4 $(@D)/mrvl/prestera
 
 ifeq ($(BR2_arm)$(BR2_aarch64),y)
-    ALLLINUXFIRMWARES_REMOVE_DIRS += $(@D)/amd $(@D)/amdgpu $(@D)/i915 $(@D)/nvidia $(@D)/radeon $(@D)/s5p-* $(@D)/qat_* $(@D)/ql2*
+    ALLLINUXFIRMWARES_REMOVE_DIRS += $(@D)/amd $(@D)/amdgpu $(@D)/intel $(@D)/i915 $(@D)/nvidia $(@D)/radeon $(@D)/s5p-* $(@D)/qat_* $(@D)/ql2*
 endif
 
 ifeq ($(BR2_PACKAGE_BRCMFMAC_SDIO_FIRMWARE_RPI)$(BR2_PACKAGE_EXTRALINUXFIRMWARES),y)
     ALLLINUXFIRMWARES_REMOVE_DIRS += $(@D)/brcm
+endif
+
+# Remove qualcomm firmware if not buidling Ayn ODIN
+ifneq ($(BR2_PACKAGE_BATOCERA_TARGET_ODIN),y)
+    ALLLINUXFIRMWARES_REMOVE_DIRS += $(@D)/qcom
 endif
 
 define ALLLINUXFIRMWARES_INSTALL_TARGET_CMDS
@@ -45,5 +50,29 @@ define ALLLINUXFIRMWARES_INSTALL_TARGET_CMDS
 		fi ; \
 	done
 endef
+
+# symlink BT firmware - workaround until AX101 BT firmware is added
+define ALLLINUXFIRMWARES_LINK_INTEL_BT
+    ln -sf /lib/firmware/intel/ibt-1040-4150.ddc \
+        $(TARGET_DIR)/lib/firmware/intel/ibt-0040-1050.ddc
+    ln -sf /lib/firmware/intel/ibt-1040-4150.sfi \
+        $(TARGET_DIR)/lib/firmware/intel/ibt-0040-1050.sfi
+endef
+
+ifeq ($(BR2_x86_64),y)
+    ALLLINUXFIRMWARES_POST_INSTALL_TARGET_HOOKS = ALLLINUXFIRMWARES_LINK_INTEL_BT
+endif
+
+# symlink BT firmware for RK3588 kernel
+define ALLLINUXFIRMWARES_LINK_RTL_BT
+    ln -sf /lib/firmware/rtl_bt/rtl8852bu_fw.bin \
+        $(TARGET_DIR)/lib/firmware/rtl8852bu_fw
+    ln -sf /lib/firmware/rtl_bt/rtl8852bu_config.bin \
+        $(TARGET_DIR)/lib/firmware/rtl8852bu_config
+endef
+
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RK3588),y)
+    ALLLINUXFIRMWARES_POST_INSTALL_TARGET_HOOKS = ALLLINUXFIRMWARES_LINK_RTL_BT
+endif
 
 $(eval $(generic-package))

@@ -3,11 +3,11 @@
 # retroarch
 #
 ################################################################################
-# Version.: Commits on Apr 7, 2023
-RETROARCH_VERSION = d625ca376267cef2c304a8a8f033f21003c8df02
+
+RETROARCH_VERSION = v1.16.0.3
 RETROARCH_SITE = $(call github,libretro,RetroArch,$(RETROARCH_VERSION))
 RETROARCH_LICENSE = GPLv3+
-RETROARCH_DEPENDENCIES = host-pkgconf dejavu retroarch-assets flac
+RETROARCH_DEPENDENCIES = host-pkgconf dejavu retroarch-assets flac noto-cjk-fonts
 # install in staging for debugging (gdb)
 RETROARCH_INSTALL_STAGING = YES
 
@@ -121,8 +121,11 @@ else
 endif
 
 ifeq ($(BR2_PACKAGE_ROCKCHIP_RGA),y)
-    RETROARCH_CONF_OPTS += --enable-odroidgo2
     RETROARCH_DEPENDENCIES += rockchip-rga
+endif
+
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RK3326),y)
+    RETROARCH_CONF_OPTS += --enable-odroidgo2
 endif
 
 ifeq ($(BR2_PACKAGE_HAS_LIBGL),y)
@@ -139,8 +142,12 @@ ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER),)
 endif
 
 ifeq ($(BR2_PACKAGE_WAYLAND),y)
-    RETROARCH_CONF_OPTS += --enable-wayland
-    RETROARCH_DEPENDENCIES += wayland
+    ifneq ($(BR2_PACKAGE_BATOCERA_TARGET_X86_ANY),y)
+        RETROARCH_CONF_OPTS += --enable-wayland
+        RETROARCH_DEPENDENCIES += wayland
+    else
+        RETROARCH_CONF_OPTS += --disable-wayland
+    endif
 else
     RETROARCH_CONF_OPTS += --disable-wayland
 endif
@@ -148,6 +155,10 @@ endif
 ifeq ($(BR2_PACKAGE_VULKAN_LOADER)$(BR2_PACKAGE_VULKAN_HEADERS),yy)
     RETROARCH_CONF_OPTS += --enable-vulkan
     RETROARCH_DEPENDENCIES += vulkan-headers vulkan-loader slang-shaders
+endif
+
+ifeq ($(BR2_riscv),y)
+	RETROARCH_TARGET_CFLAGS += -DMESA_EGL_NO_X11_HEADERS=1
 endif
 
 define RETROARCH_CONFIGURE_CMDS

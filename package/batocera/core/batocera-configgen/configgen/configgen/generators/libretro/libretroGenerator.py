@@ -24,7 +24,7 @@ class LibretroGenerator(Generator):
 
     # Main entry of the module
     # Configure retroarch and return a command
-    def generate(self, system, rom, playersControllers, guns, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, wheels, gameResolution):
         # Fix for the removed MESS/MAMEVirtual cores
         if system.config['core'] in [ 'mess', 'mamevirtual' ]:
             system.config['core'] = 'mame'
@@ -75,7 +75,7 @@ class LibretroGenerator(Generator):
                 lightgun = system.getOptBoolean('lightgun_map')
             else:
                 # Lightgun button mapping breaks lr-mame's inputs, disable if left on auto
-                if system.config['core'] in [ 'mame', 'mess', 'mamevirtual', 'same_cdi', 'mame078plus', 'mame0139' ]:
+                if system.config['core'] in [ 'mess', 'mamevirtual', 'same_cdi', 'mame078plus', 'mame0139' ]:
                     lightgun = False
                 else:
                     lightgun = True
@@ -250,12 +250,25 @@ class LibretroGenerator(Generator):
             # set the updated core name
             retroarchCore = batoceraFiles.retroarchCores + system.config['core'] + "_libretro.so"
             commandArray = [batoceraFiles.batoceraBins[system.config['emulator']], "-L", retroarchCore, "--config", system.config['configfile']]
+        # boom3
+        elif system.name == 'boom3':
+            with open(rom, 'r') as file:
+                first_line = file.readline().strip()
+            # extracting the directory path from the original 'rom' variable
+            directory_path = '/'.join(rom.split('/')[:-1])
+            # creating the new 'rom' variable by combining the directory path and the first line
+            rom = f"{directory_path}/{first_line}"
+            # choose core based on new rom directory
+            directory_path = os.path.dirname(rom)
+            if "d3xp" in directory_path:
+                system.config['core'] = "boom3_xp" 
+            retroarchCore = batoceraFiles.retroarchCores + system.config['core'] + "_libretro.so"
+            commandArray = [batoceraFiles.batoceraBins[system.config['emulator']], "-L", retroarchCore, "--config", system.config['configfile']]
         else:
             commandArray = [batoceraFiles.batoceraBins[system.config['emulator']], "-L", retroarchCore, "--config", system.config['configfile']]
-
+        
         configToAppend = []
-
-
+        
         # Custom configs - per core
         customCfg = f"{batoceraFiles.retroarchRoot}/{system.name}.cfg"
         if os.path.isfile(customCfg):
@@ -301,6 +314,18 @@ class LibretroGenerator(Generator):
         if system.name == 'scummvm':
             rom = os.path.dirname(rom) + '/' + romName[0:-8]
         
+        if system.name == 'reminiscence':
+            with open(rom, 'r') as file:
+                first_line = file.readline().strip()
+            directory_path = '/'.join(rom.split('/')[:-1])
+            rom = f"{directory_path}/{first_line}"
+        
+        if system.name == 'openlara':
+            with open(rom, 'r') as file:
+                first_line = file.readline().strip()
+            directory_path = '/'.join(rom.split('/')[:-1])
+            rom = f"{directory_path}/{first_line}"
+                
         # Use command line instead of ROM file for MAME variants
         if system.config['core'] in [ 'mame', 'mess', 'mamevirtual', 'same_cdi' ]:
             dontAppendROM = True

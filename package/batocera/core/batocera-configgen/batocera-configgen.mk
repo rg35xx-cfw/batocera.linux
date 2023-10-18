@@ -1,6 +1,6 @@
 ################################################################################
 #
-# batocera configgen
+# batocera-configgen
 #
 ################################################################################
 
@@ -10,8 +10,10 @@ BATOCERA_CONFIGGEN_SOURCE=
 BATOCERA_CONFIGGEN_DEPENDENCIES = python3 python-pyyaml
 BATOCERA_CONFIGGEN_INSTALL_STAGING = YES
 
+CONFIGGEN_DIR = $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-configgen
+
 define BATOCERA_CONFIGGEN_EXTRACT_CMDS
-	cp -R $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-configgen/configgen/* $(@D)
+	cp -avf $(CONFIGGEN_DIR)/configgen/* $(@D)
 endef
 
 ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_BCM2835),y)
@@ -32,8 +34,8 @@ else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S905GEN2),y)
 	BATOCERA_CONFIGGEN_SYSTEM=s905gen2
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S905GEN3),y)
 	BATOCERA_CONFIGGEN_SYSTEM=s905gen3
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S912),y)
-	BATOCERA_CONFIGGEN_SYSTEM=s912
+else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S9GEN4),y)
+	BATOCERA_CONFIGGEN_SYSTEM=s9gen4
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_X86),y)
 	BATOCERA_CONFIGGEN_SYSTEM=x86
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY),y)
@@ -48,22 +50,20 @@ else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RK3568),y)
 	BATOCERA_CONFIGGEN_SYSTEM=rk3568
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RK3326),y)
 	BATOCERA_CONFIGGEN_SYSTEM=rk3326
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_TRITIUM_H5),y)
-	BATOCERA_CONFIGGEN_SYSTEM=tritium-h5
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ORANGEPI_ZERO2),y)
-	BATOCERA_CONFIGGEN_SYSTEM=orangepi-zero2
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ORANGEPI_PC),y)
-	BATOCERA_CONFIGGEN_SYSTEM=orangepi-pc
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_CHA),y)
-	BATOCERA_CONFIGGEN_SYSTEM=cha
+else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_H3),y)
+	BATOCERA_CONFIGGEN_SYSTEM=h3
+else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_H5),y)
+	BATOCERA_CONFIGGEN_SYSTEM=h5
+else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_H616),y)
+	BATOCERA_CONFIGGEN_SYSTEM=h616
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S812),y)
 	BATOCERA_CONFIGGEN_SYSTEM=s812
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RK3128),y)
 	BATOCERA_CONFIGGEN_SYSTEM=rk3128
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODIN),y)
 	BATOCERA_CONFIGGEN_SYSTEM=odin
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ORANGEPI_3_LTS),y)
-	BATOCERA_CONFIGGEN_SYSTEM=orangepi-3-lts
+else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_H6),y)
+	BATOCERA_CONFIGGEN_SYSTEM=h6
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RK3588),y)
 	BATOCERA_CONFIGGEN_SYSTEM=rk3588
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RISCV),y)
@@ -74,20 +74,28 @@ endif
 
 define BATOCERA_CONFIGGEN_INSTALL_STAGING_CMDS
 	mkdir -p $(STAGING_DIR)/usr/share/batocera/configgen
-	cp $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-configgen/configs/configgen-defaults.yml $(STAGING_DIR)/usr/share/batocera/configgen/configgen-defaults.yml
-	cp $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-configgen/configs/configgen-defaults-$(BATOCERA_CONFIGGEN_SYSTEM).yml $(STAGING_DIR)/usr/share/batocera/configgen/configgen-defaults-arch.yml
+	cp $(CONFIGGEN_DIR)/configs/configgen-defaults.yml \
+	    $(STAGING_DIR)/usr/share/batocera/configgen/configgen-defaults.yml
+	cp $(CONFIGGEN_DIR)/configs/configgen-defaults-$(BATOCERA_CONFIGGEN_SYSTEM).yml \
+	    $(STAGING_DIR)/usr/share/batocera/configgen/configgen-defaults-arch.yml
 endef
 
 define BATOCERA_CONFIGGEN_CONFIGS
 	mkdir -p $(TARGET_DIR)/usr/share/batocera/configgen
-	cp -pr $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-configgen/data $(TARGET_DIR)/usr/share/batocera/configgen/
-	cp $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-configgen/configs/configgen-defaults.yml $(TARGET_DIR)/usr/share/batocera/configgen/configgen-defaults.yml
-	cp $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-configgen/configs/configgen-defaults-$(BATOCERA_CONFIGGEN_SYSTEM).yml $(TARGET_DIR)/usr/share/batocera/configgen/configgen-defaults-arch.yml
+	cp -pr $(CONFIGGEN_DIR)/data \
+	    $(TARGET_DIR)/usr/share/batocera/configgen/
+	cp $(CONFIGGEN_DIR)/configs/configgen-defaults.yml \
+	    $(TARGET_DIR)/usr/share/batocera/configgen/configgen-defaults.yml
+	cp $(CONFIGGEN_DIR)/configs/configgen-defaults-$(BATOCERA_CONFIGGEN_SYSTEM).yml \
+	    $(TARGET_DIR)/usr/share/batocera/configgen/configgen-defaults-arch.yml
+	cp $(CONFIGGEN_DIR)/scripts/call_achievements_hooks.sh \
+	    $(TARGET_DIR)/usr/share/batocera/configgen/
 endef
 
 define BATOCERA_CONFIGGEN_BINS
-        chmod a+x $(TARGET_DIR)/usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages/configgen/emulatorlauncher.py
-        (mkdir -p $(TARGET_DIR)/usr/bin/ && cd $(TARGET_DIR)/usr/bin/ && ln -sf /usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages/configgen/emulatorlauncher.py emulatorlauncher)
+    chmod a+x $(TARGET_DIR)/usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages/configgen/emulatorlauncher.py
+	(mkdir -p $(TARGET_DIR)/usr/bin/ && cd $(TARGET_DIR)/usr/bin/ && \
+	    ln -sf /usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages/configgen/emulatorlauncher.py emulatorlauncher)
 endef
 
 BATOCERA_CONFIGGEN_POST_INSTALL_TARGET_HOOKS = BATOCERA_CONFIGGEN_CONFIGS

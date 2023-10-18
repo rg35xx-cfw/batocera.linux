@@ -239,6 +239,18 @@ def getGenerator(emulator):
         from generators.hcl.hclGenerator import HclGenerator
         return HclGenerator()
 
+    if emulator == 'hurrican':
+        from generators.hurrican.hurricanGenerator import HurricanGenerator
+        return HurricanGenerator()
+
+    if emulator == 'tyrian':
+        from generators.tyrian.tyrianGenerator import TyrianGenerator
+        return TyrianGenerator()
+
+    if emulator == 'openjazz':
+        from generators.openjazz.openjazzGenerator import OpenJazzGenerator
+        return OpenJazzGenerator()
+
     if emulator == 'openmsx':
         from generators.openmsx.openmsxGenerator import OpenmsxGenerator
         return OpenmsxGenerator()
@@ -283,9 +295,41 @@ def getGenerator(emulator):
         from generators.pyxel.pyxelGenerator import PyxelGenerator
         return PyxelGenerator()
 
-    #if emulator == 'play':
-    #from generators.play.playGenerator import PlayGenerator
-    #return PlayGenerator(),
+    if emulator == 'play':
+        from generators.play.playGenerator import PlayGenerator
+        return PlayGenerator()
+    
+    if emulator == "ioquake3":
+        from generators.ioquake3.ioquake3Generator import IOQuake3Generator
+        return IOQuake3Generator()
+
+    if emulator == "thextech":
+        from generators.thextech.thextechGenerator import TheXTechGenerator
+        return TheXTechGenerator()
+
+    if emulator == 'vpinball':
+        from generators.vpinball.vpinballGenerator import VPinballGenerator
+        return VPinballGenerator()
+
+    if emulator == 'applewin':
+        from generators.applewin.applewinGenerator import AppleWinGenerator
+        return AppleWinGenerator()
+
+    if emulator == 'corsixth':
+        from generators.corsixth.corsixthGenerator import CorsixTHGenerator
+        return CorsixTHGenerator()
+
+    if emulator == 'stella':
+        from generators.stella.stellaGenerator import StellaGenerator
+        return StellaGenerator()
+    
+    if emulator == "theforceengine":
+        from generators.theforceengine.theforceengineGenerator import TheForceEngineGenerator
+        return TheForceEngineGenerator()
+    
+    if emulator == "iortcw":
+        from generators.iortcw.iortcwGenerator import IORTCWGenerator
+        return IORTCWGenerator()
 
     if emulator == 'sh':
         from generators.sh.shGenerator import ShGenerator

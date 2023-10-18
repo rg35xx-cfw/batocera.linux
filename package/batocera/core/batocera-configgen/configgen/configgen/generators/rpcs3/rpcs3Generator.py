@@ -11,11 +11,12 @@ import configparser
 import ruamel.yaml as yaml
 import json
 import re
+import controllersConfig
 from . import rpcs3Controllers
 
 class Rpcs3Generator(Generator):
 
-    def generate(self, system, rom, playersControllers, guns, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, wheels, gameResolution):
 
         rpcs3Controllers.generateControllerConfig(system, playersControllers, rom)
 
@@ -106,7 +107,23 @@ class Rpcs3Generator(Generator):
             rpcs3ymlconfig["Core"]["Preferred SPU Threads"] = system.config["rpcs3_sputhreads"]
         else:
             rpcs3ymlconfig["Core"]["Preferred SPU Threads"] = 0
-
+        # SPU Loop Detection
+        if system.isOptSet("rpcs3_spuloopdetection"):
+            rpcs3ymlconfig["Core"]["SPU loop detection"] = system.config["rpcs3_spuloopdetection"]
+        else:
+            rpcs3ymlconfig["Core"]["SPU loop detection"] = False
+        # SPU Block Size
+        if system.isOptSet("rpcs3_spublocksize"):
+            rpcs3ymlconfig["Core"]["SPU Block Size"] = system.config["rpcs3_spublocksize"]
+        else:
+            rpcs3ymlconfig["Core"]["SPU Block Size"] = "Safe"
+        # Max Power Saving CPU-Preemptions
+        # values are maximum yields per frame threshold
+        if system.isOptSet("rpcs3_maxcpu_preemptcount"):
+            rpcs3ymlconfig["Core"]["Max CPU Preempt Count"] = system.config["rpcs3_maxcpu_preemptcount"]           
+        else:
+            rpcs3ymlconfig["Core"]["Max CPU Preempt Count"] = 0
+            
         # -= [Video] =-
         # gfx backend - default to Vulkan
         if system.isOptSet("rpcs3_gfxbackend"):
@@ -203,20 +220,33 @@ class Rpcs3Generator(Generator):
         if system.isOptSet("rpcs3_audio_format"):
             rpcs3ymlconfig["Audio"]["Audio Format"] = system.config["rpcs3_audio_format"]
         else:
-            rpcs3ymlconfig["Audio"]["Audio Format"] = "Stereo"
+            rpcs3ymlconfig["Audio"]["Audio Format"] = "Automatic"
+        # convert to 16 bit
+        if system.isOptSet("rpcs3_audio_16bit") and system.config["rpcs3_audio_16bit"] == "True":
+            rpcs3ymlconfig["Audio"]["Convert to 16 bit"] = True
+        else:
+            rpcs3ymlconfig["Audio"]["Convert to 16 bit"] = False        
         # audio buffering
         if system.isOptSet("rpcs3_audiobuffer"):
             rpcs3ymlconfig["Audio"]["Enable Buffering"] = system.config["rpcs3_audiobuffer"]
         else:
             rpcs3ymlconfig["Audio"]["Enable Buffering"] = True
-        rpcs3ymlconfig["Audio"]["Desired Audio Buffer Duration"] = 100
+        # audio buffer duration
+        if system.isOptSet("rpcs3_audiobuffer_duration"):
+            rpcs3ymlconfig["Audio"]["Desired Audio Buffer Duration"] = int(system.config["rpcs3_audiobuffer_duration"])
+        else:
+            rpcs3ymlconfig["Audio"]["Desired Audio Buffer Duration"] = 100
         # time stretching
         if system.isOptSet("rpcs3_timestretch") and system.config["rpcs3_timestretch"] == "True":
             rpcs3ymlconfig["Audio"]["Enable Time Stretching"] = True
             rpcs3ymlconfig["Audio"]["Enable Buffering"] = True
         else:
             rpcs3ymlconfig["Audio"]["Enable Time Stretching"] = False
-        rpcs3ymlconfig["Audio"]["Time Stretching Threshold"] = 75
+        # time stretching threshold
+        if system.isOptSet("rpcs3_timestretch_threshold"):
+            rpcs3ymlconfig["Audio"]["Time Stretching Threshold"] = int(system.config["rpcs3_timestretch_threshold"])
+        else:
+            rpcs3ymlconfig["Audio"]["Time Stretching Threshold"] = 75
 
         # -= [Input/Output] =-
         # gun stuff
@@ -252,6 +282,10 @@ class Rpcs3Generator(Generator):
             romBasename = path.basename(rom)
             romName = rom + "/PS3_GAME/USRDIR/EBOOT.BIN"
         
+        # write our own gamecontrollerdb.txt file before launching the game
+        dbfile = "/userdata/system/configs/rpcs3/input_configs/gamecontrollerdb.txt"
+        controllersConfig.writeSDLGameDBAllControllers(playersControllers, dbfile)
+        
         commandArray = [batoceraFiles.batoceraBins[system.config["emulator"]], romName]
 
         if not (system.isOptSet("rpcs3_gui") and system.getOptBoolean("rpcs3_gui")):
@@ -264,9 +298,15 @@ class Rpcs3Generator(Generator):
 
         return Command.Command(
             array=commandArray,
-            env={"XDG_CONFIG_HOME":batoceraFiles.CONF, "XDG_CACHE_HOME":batoceraFiles.CACHE, "QT_QPA_PLATFORM":"xcb"}
+            env={
+                "XDG_CONFIG_HOME":batoceraFiles.CONF,
+                "XDG_CACHE_HOME":batoceraFiles.CACHE,
+                "QT_QPA_PLATFORM":"xcb",
+                "SDL_GAMECONTROLLERCONFIG": controllersConfig.generateSdlGameControllerConfig(playersControllers),
+                "SDL_JOYSTICK_HIDAPI": "0"
+            }
         )
-
+    
     def getClosestRatio(gameResolution):
         screenRatio = gameResolution["width"] / gameResolution["height"]
         if screenRatio < 1.6:

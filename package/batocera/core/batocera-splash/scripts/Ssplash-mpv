@@ -12,6 +12,16 @@ FM_VIDEO=".*\.\(mp4\|MP4\)"
 . /etc/profile.d/xdg.sh
 . /etc/profile.d/dbus.sh
 
+# CHA wants a specific splash file
+if [ -f /sys/firmware/devicetree/base/model ]; then
+    IFS= read -r BOARD_MODEL </sys/firmware/devicetree/base/model
+fi
+BOARD_MODEL="$(echo "$BOARD_MODEL" | sed -e s+"[^A-Za-z0-9]"+"_"+g)"
+BOARD_CHA="Capcom_Home_Arcade"
+if [ "${BOARD_MODEL}" = "${BOARD_CHA}" ]; then
+    DEFAULT="/usr/share/batocera/splash/Capcom.mp4"
+fi
+
 do_angels_conversion ()
 {
     [[ $1 -lt 0 || $1 -gt 3 ]] && echo 0 || echo $(($1*90))
@@ -56,7 +66,7 @@ do_videostart ()
 {
     video="$1"
     printf 'Video: %s: ' "$video"
-    mpv_audio=
+    mpv_audio=--ao=sdl
 
     soundDisabled=$(batocera-settings-get splash.screen.sound)
     if [[ $? -eq 0 ]]; then
@@ -79,10 +89,12 @@ do_videostart ()
 	# --vf-add=sub : rotation of subtitles
         [[ $? -eq 0 ]] && mpv_video="--video-rotate=${video_rotation} --vf-add=sub"
     fi
-    video_resize=$(batocera-settings-get splash.screen.resize)
+    drm_mode="preferred"
+    video_resize=$(batocera-settings-get-master splash.screen.resize)
     if [[ $? -eq 0 ]]; then
         resize=$(echo "${video_resize}" | sed "s/x/:/")
         mpv_video="${mpv_video} --vf=scale=${resize}"
+        drm_mode=$video_resize
     fi
     video_subtitle=$(batocera-settings-get splash.screen.subtitle)
     if [[ $? -eq 0 ]]; then
@@ -116,7 +128,7 @@ do_videostart ()
     echo "Selected DRM connector: $drm_connector" >> $log
     
     # it should be drm everywhere (including for x86_64 while it is on fb) -- only rpi doesn't use drm and it doesn't use this boot splash script
-    start-stop-daemon -S -b -q -m -p /var/run/user-splash.pid --exec /usr/bin/mpv -- --really-quiet --no-config %PLAYER_OPTIONS% --log-file=/userdata/system/logs/mpv.log --drm-connector=$drm_connector $mpv_audio $mpv_video "$video"
+    start-stop-daemon -S -b -q -m -p /var/run/user-splash.pid --exec /usr/bin/mpv -- --really-quiet --no-config %PLAYER_OPTIONS% --log-file=/userdata/system/logs/mpv.log --drm-connector=$drm_connector $mpv_audio $mpv_video --drm-mode=$drm_mode "$video"
 }
 
 case "$1" in

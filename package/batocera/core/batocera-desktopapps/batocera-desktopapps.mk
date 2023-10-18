@@ -15,7 +15,7 @@ BATOCERA_DESKTOPAPPS_APPS    += xwiishowir.desktop
 BATOCERA_DESKTOPAPPS_ICONS   += xwiishowir.png
 
 # pcsx2
-ifeq ($(BR2_PACKAGE_PCSX2)$(BR2_PACKAGE_PCSX2_AVX2),yy)
+ifeq ($(BR2_PACKAGE_PCSX2),y)
   BATOCERA_DESKTOPAPPS_SCRIPTS += batocera-config-pcsx2
   BATOCERA_DESKTOPAPPS_APPS    += pcsx2-config.desktop
   BATOCERA_DESKTOPAPPS_ICONS   += pcsx2.png
@@ -164,6 +164,13 @@ ifeq ($(BR2_PACKAGE_BIGPEMU),y)
   BATOCERA_DESKTOPAPPS_SCRIPTS += batocera-config-bigpemu
   BATOCERA_DESKTOPAPPS_APPS    += bigpemu-config.desktop
   BATOCERA_DESKTOPAPPS_ICONS   += bigpemu.png
+endif
+
+# play!
+ifeq ($(BR2_PACKAGE_PLAY),y)
+  BATOCERA_DESKTOPAPPS_SCRIPTS += batocera-config-play
+  BATOCERA_DESKTOPAPPS_APPS    += play-config.desktop
+  BATOCERA_DESKTOPAPPS_ICONS   += play.png
 endif
 
 define BATOCERA_DESKTOPAPPS_INSTALL_TARGET_CMDS

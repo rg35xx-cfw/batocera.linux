@@ -4,8 +4,8 @@
 #
 ################################################################################
 
-# Version: 5.0-19459 - Commits on May 30, 2023
-DOLPHIN_EMU_VERSION = da77084d2f20510e78dd8178cdeab764c3dc1834
+# Version: 5.0-20212 - Commits on Oct 11, 2023
+DOLPHIN_EMU_VERSION = 1c0605d1c41d5e99b6e13a90dca7bb7a126d355b
 DOLPHIN_EMU_SITE = https://github.com/dolphin-emu/dolphin
 DOLPHIN_EMU_SITE_METHOD = git
 DOLPHIN_EMU_LICENSE = GPLv2+
@@ -13,7 +13,7 @@ DOLPHIN_EMU_GIT_SUBMODULES = YES
 DOLPHIN_EMU_SUPPORTS_IN_SOURCE_BUILD = NO
 
 DOLPHIN_EMU_DEPENDENCIES = libevdev ffmpeg zlib libpng lzo libusb libcurl
-DOLPHIN_EMU_DEPENDENCIES += bluez5_utils hidapi xz host-xz sdl2 qt6base qt6svg
+DOLPHIN_EMU_DEPENDENCIES += bluez5_utils hidapi xz host-xz sdl2
 
 DOLPHIN_EMU_CONF_OPTS  = -DCMAKE_BUILD_TYPE=Release
 DOLPHIN_EMU_CONF_OPTS += -DBUILD_SHARED_LIBS=OFF
@@ -24,7 +24,14 @@ DOLPHIN_EMU_CONF_OPTS += -DUSE_UPNP=OFF
 DOLPHIN_EMU_CONF_OPTS += -DENABLE_TESTS=OFF
 DOLPHIN_EMU_CONF_OPTS += -DENABLE_AUTOUPDATE=OFF
 DOLPHIN_EMU_CONF_OPTS += -DENABLE_ANALYTICS=OFF
+DOLPHIN_EMU_CONF_OPTS += -DUSE_SYSTEM_LIBS=AUTO
+
+ifeq ($(BR2_PACKAGE_QT6),y)
+DOLPHIN_EMU_DEPENDENCIES += qt6base qt6svg
 DOLPHIN_EMU_CONF_OPTS += -DENABLE_QT=ON
+else
+DOLPHIN_EMU_CONF_OPTS += -DENABLE_QT=OFF
+endif
 
 DOLPHIN_EMU_MAKE_ENV += LDFLAGS="-Wl,--copy-dt-needed-entries"
 DOLPHIN_EMU_CONF_ENV += LDFLAGS="-Wl,--copy-dt-needed-entries"

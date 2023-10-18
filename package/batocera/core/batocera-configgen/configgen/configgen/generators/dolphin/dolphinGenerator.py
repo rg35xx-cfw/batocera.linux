@@ -12,7 +12,7 @@ import controllersConfig
 
 class DolphinGenerator(Generator):
 
-    def generate(self, system, rom, playersControllers, guns, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, wheels, gameResolution):
         if not os.path.exists(os.path.dirname(batoceraFiles.dolphinIni)):
             os.makedirs(os.path.dirname(batoceraFiles.dolphinIni))
 
@@ -63,7 +63,12 @@ class DolphinGenerator(Generator):
 
         # PanicHandlers displaymessages
         dolphinSettings.set("Interface", "UsePanicHandlers",        "False")
-        dolphinSettings.set("Interface", "OnScreenDisplayMessages", "True")
+        
+        # Display message in game (Memory card save and many more...)
+        if system.isOptSet("ShowDpMsg") and system.getOptBoolean("ShowDpMsg") == False:
+            dolphinSettings.set("Interface", "OnScreenDisplayMessages", "False")
+        else:
+            dolphinSettings.set("Interface", "OnScreenDisplayMessages", "True")
 
         # Don't confirm at stop
         dolphinSettings.set("Interface", "ConfirmStop", "False")
@@ -117,10 +122,14 @@ class DolphinGenerator(Generator):
 
         # Gamecube ports
         # Create a for loop going 1 through to 4 and iterate through it:
-        for i in range(1,5):
-            if system.isOptSet("dolphin_port_" + str(i) + "_type"):
+        for i in range(1, 5):
+            key = "dolphin_port_" + str(i) + "_type"
+            if system.isOptSet(key):
+                value = system.config[key]
+                # Set value to 6 if it is 6a or 6b. This is to differentiate between Standard Controller and GameCube Controller type.
+                value = "6" if value in ["6a", "6b"] else value
                 # Sub in the appropriate values from es_features, accounting for the 1 integer difference.
-                dolphinSettings.set("Core", "SIDevice" + str(i - 1), system.config["dolphin_port_" + str(i) + "_type"])
+                dolphinSettings.set("Core", "SIDevice" + str(i - 1), value)
             else:
                 dolphinSettings.set("Core", "SIDevice" + str(i - 1), "6")
 
@@ -133,6 +142,31 @@ class DolphinGenerator(Generator):
         # Change discs automatically
         dolphinSettings.set("Core", "AutoDiscChange", "True")
 
+        # Skip Menu
+        if system.isOptSet("dolphin_SkipIPL") and system.getOptBoolean("dolphin_SkipIPL"):
+            # check files exist to avoid crashes
+            ipl_regions = ["USA", "EUR", "JAP"]
+            base_path = "/userdata/bios/GC"
+            if any(os.path.exists(os.path.join(base_path, region, "IPL.bin")) for region in ipl_regions):
+                dolphinSettings.set("Core", "SkipIPL", "False")
+            else:
+                dolphinSettings.set("Core", "SkipIPL", "True")
+        else:
+            dolphinSettings.set("Core", "SkipIPL", "True")
+        
+        # Set audio backend
+        dolphinSettings.set("DSP", "Backend", "Cubeb")
+        
+        # Dolby Pro Logic II for surround sound
+        if system.isOptSet("dplii") and system.getOptBoolean("dplii"):
+            dolphinSettings.set("Core", "DPL2Decoder", "True")
+            dolphinSettings.set("Core", "DSPHLE", "False")
+            dolphinSettings.set("DSP", "EnableJIT", "True")
+        else:
+            dolphinSettings.set("Core", "DPL2Decoder", "False")
+            dolphinSettings.set("Core", "DSPHLE", "True")
+            dolphinSettings.set("DSP", "EnableJIT", "False")   
+        
         # Save dolphin.ini
         with open(batoceraFiles.dolphinIni, 'w') as configfile:
             dolphinSettings.write(configfile)
@@ -269,6 +303,12 @@ class DolphinGenerator(Generator):
             dolphinGFXSettings.set("Settings", "SSAA", "True")
         else:
             dolphinGFXSettings.set("Settings", "SSAA", "False")
+        
+        # Manual texture sampling
+        if system.isOptSet('manual_texture_sampling') and system.getOptBoolean('manual_texture_sampling'):
+            dolphinGFXSettings.set("Hacks", "FastTextureSampling", "False")
+        else:
+            dolphinGFXSettings.set("Hacks", "FastTextureSampling", "True")        
 
         # Save gfx.ini
         with open(batoceraFiles.dolphinGfxIni, 'w') as configfile:
@@ -303,8 +343,8 @@ class DolphinGenerator(Generator):
         hotkeyConfig.set('Hotkeys', 'Wii/Connect Wii Remote 4', '@(Alt+F8)')
         hotkeyConfig.set('Hotkeys', 'Wii/Connect Balance Board', '@(Alt+F9)')
         # Select
-        hotkeyConfig.set('Hotkeys', 'Select State/Select State Slot 1', '@(Shift+F1)')
-        hotkeyConfig.set('Hotkeys', 'Select State/Select State Slot 2', '@(Shift+F2)')
+        hotkeyConfig.set('Hotkeys', 'Other State Hotkeys/Increase Selected State Slot', '@(Shift+F1)')
+        hotkeyConfig.set('Hotkeys', 'Other State Hotkeys/Decrease Selected State Slot', '@(Shift+F2)')
         # Load
         hotkeyConfig.set('Hotkeys', 'Load State/Load from Selected Slot', 'F8')
         # Save State
@@ -324,7 +364,10 @@ class DolphinGenerator(Generator):
         hotkeyConfig.set('Hotkeys', 'GBA Window Size/2x', '`KP_2`')
         hotkeyConfig.set('Hotkeys', 'GBA Window Size/3x', '`KP_3`')
         hotkeyConfig.set('Hotkeys', 'GBA Window Size/4x', '`KP_4`')
-        # 
+        # Skylanders Portal
+        hotkeyConfig.set('Hotkeys', 'USB Emulation Devices/Show Skylanders Portal', '@(Ctrl+P)')
+        hotkeyConfig.set('Hotkeys', 'USB Emulation Devices/Show Infinity Base', '@(Ctrl+I)')
+        #
         # Write the configuration to the file
         hotkey_path = '/userdata/system/configs/dolphin-emu/Hotkeys.ini'
         with open(hotkey_path, 'w') as configfile:
@@ -342,7 +385,11 @@ class DolphinGenerator(Generator):
             commandArray = ["dolphin-emu", "-b", "-e", rom]
         else:
             commandArray = ["dolphin-emu-nogui", "-e", rom]
-        
+
+        # state_slot option
+        if system.isOptSet('state_filename'):
+            commandArray.extend(["--save_state", system.config['state_filename']])
+
         return Command.Command(array=commandArray, \
             env={ "XDG_CONFIG_HOME":batoceraFiles.CONF, \
             "XDG_DATA_HOME":batoceraFiles.SAVES, \

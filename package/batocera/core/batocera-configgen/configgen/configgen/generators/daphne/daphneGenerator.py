@@ -14,7 +14,7 @@ eslog = get_logger(__name__)
 class DaphneGenerator(Generator):
 
     # Main entry of the module
-    def generate(self, system, rom, playersControllers, guns, gameResolution):
+    def generate(self, system, rom, playersControllers, guns, wheels, gameResolution):
         # copy input.ini file templates
         daphneConfigSource = "/usr/share/daphne/hypinput_gamepad.ini"
 
@@ -53,13 +53,13 @@ class DaphneGenerator(Generator):
         
         # create symbolic link for singe
         if not os.path.exists(batoceraFiles.daphneDatadir + "/singe"):
+            os.mkdir(batoceraFiles.daphneDatadir + "/singe")
             if not os.path.exists(batoceraFiles.daphneHomedir + "/roms"):
                 os.mkdir(batoceraFiles.daphneHomedir + "/roms")
             os.symlink(batoceraFiles.daphneHomedir + "/roms", batoceraFiles.daphneDatadir + "/singe")
         if not os.path.islink(batoceraFiles.daphneDatadir + "/singe"):
             eslog.error("Your {} directory isn't a symlink, that's not good.".format(batoceraFiles.daphneDatadir + "/singe"))
-            
-        
+                
         # extension used .daphne and the file to start the game is in the folder .daphne with the extension .txt
         romName = os.path.splitext(os.path.basename(rom))[0]
         frameFile = rom + "/" + romName + ".txt"
@@ -93,12 +93,12 @@ class DaphneGenerator(Generator):
         else:
             commandArray.append("-opengl")
 
-        # Disable Bilinear Filtering
+        # Enable Bilinear Filtering
         if system.isOptSet('bilinear_filter') and system.getOptBoolean("bilinear_filter"):
-            commandArray.append("-nolinear_scale")
+            commandArray.append("-linear_scale")
 
         #The following options should only be set when os.path.isfile(singeFile) is true.
-        #-blend_sprites, -set_overlay oversize, -nocrosshair, -sinden or -manymouse
+        #-blend_sprites, -nocrosshair, -sinden or -manymouse
         if os.path.isfile(singeFile):
             # Blend Sprites (Singe)
             if system.isOptSet('blend_sprites') and system.getOptBoolean("blend_sprites"):
@@ -132,14 +132,6 @@ class DaphneGenerator(Generator):
                     if system.isOptSet('abs_mouse_input') and system.getOptBoolean("abs_mouse_input"):
                         commandArray.extend(["-manymouse"]) # this is causing issues on some "non-gun" games
 
-            # Overlay sizes (Singe) for HD lightgun and Singe 2 games
-            if system.isOptSet('overlay_size') and system.config['overlay_size'] == 'oversize':
-                commandArray.extend(["-set_overlay", "oversize"])
-            elif system.isOptSet('overlay_size') and system.config['overlay_size'] == 'full':
-                commandArray.extend(["-set_overlay", "full"])
-            elif system.isOptSet('overlay_size') and system.config['overlay_size'] == 'half':
-                commandArray.extend(["-set_overlay", "half"])
-            
             # crosshair
             if system.isOptSet('daphne_crosshair'):
                 if not system.getOptBoolean("daphne_crosshair"):
@@ -148,7 +140,7 @@ class DaphneGenerator(Generator):
                     if not controllersConfig.gunsNeedCrosses(guns):
                         commandArray.append("-nocrosshair")
 
-        # Invert Axis
+        # Invert HAT Axis
         if system.isOptSet('invert_axis') and system.getOptBoolean("invert_axis"):
             commandArray.append("-tiphat")
 
@@ -170,7 +162,7 @@ class DaphneGenerator(Generator):
         if system.isOptSet('daphne_scanlines') and system.getOptBoolean("daphne_scanlines"):
             commandArray.append("-scanlines")
 
-        # Hide crosshair in supported games (e.g. ActionMax)
+        # Hide crosshair in supported games (e.g. ActionMax, ALG)
         if system.isOptSet('singe_crosshair') and system.getOptBoolean("singe_crosshair"):
             commandArray.append("-nocrosshair")
 
