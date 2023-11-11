@@ -1,0 +1,11 @@
+config BR2_PACKAGE_LIBRETRO_GME
+    bool "libretro-gme"
+	depends on BR2_PACKAGE_RETROARCH
+	depends on BR2_INSTALL_LIBSTDCPP
+      help
+        A libretro core for blargg' Game Music Emu
+
+	  http://www.libretro.com
+
+comment "LIBRETRO_GME needs a toolchain w/ C++"
+	depends on !BR2_INSTALL_LIBSTDCPP

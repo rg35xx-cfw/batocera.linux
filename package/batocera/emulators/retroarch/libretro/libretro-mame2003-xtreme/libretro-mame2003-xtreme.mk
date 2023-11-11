@@ -30,7 +30,7 @@ LIBRETRO_MAME2003_XTREME_PLATFORM = s812
 LIBRETRO_MAME2003_XTREME_EXTRA_ARGS = HAS_CYCLONE=1 HAS_DRZ80=1
 
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RG35XX),y)
-LIBRETRO_MAME2003_XTREME_PLATFORM = s812 unix
+LIBRETRO_MAME2003_XTREME_PLATFORM = unix armv neon hardfloat
 LIBRETRO_MAME2003_XTREME_EXTRA_ARGS = HAS_CYCLONE=1 HAS_DRZ80=1
 
 else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ORANGEPI_PC)$(BR2_PACKAGE_BATOCERA_TARGET_CHA)$(BR2_PACKAGE_BATOCERA_TARGET_RK3128),y)
@@ -45,8 +45,8 @@ define LIBRETRO_MAME2003_XTREME_BUILD_CMDS
 endef
 
 define LIBRETRO_MAME2003_XTREME_INSTALL_TARGET_CMDS
-	$(INSTALL) -D $(@D)/mame2003_xtreme_libretro.so \
-		$(TARGET_DIR)/usr/lib/libretro/mame078xtreme_libretro.so
+	$(INSTALL) -D $(@D)/km_mame2003_xtreme_amped_libretro.so \
+		$(TARGET_DIR)/usr/lib/libretro/km_mame2003_xtreme_amped_libretro.so
 
 	# Bios
     # Need to think of another way to use these files.

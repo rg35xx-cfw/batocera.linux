@@ -1,0 +1,6 @@
+config BR2_PACKAGE_LIBRETRO_METEOR
+    bool "libretro-meteor"
+      help
+	Meteor is a Nintendo Gameboy Advance emulator. 	
+
+	https://github.com/libretro/meteor-libretro

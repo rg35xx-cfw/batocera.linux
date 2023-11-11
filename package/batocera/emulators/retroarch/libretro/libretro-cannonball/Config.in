@@ -1,0 +1,10 @@
+config BR2_PACKAGE_LIBRETRO_CANNONBALL
+    bool "libretro-cannonball"
+    select BR2_PACKAGE_SDL2
+    select BR2_PACKAGE_SDL2_MIXER
+    select BR2_PACKAGE_LIBPNG
+    select BR2_PACKAGE_ZLIB
+      help
+	Cannonball is an enhanced version of the seminal arcade racer OutRun designed by Yu Suzuki.
+
+	https://github.com/kodi-game/game.libretro.cannonball

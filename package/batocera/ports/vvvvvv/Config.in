@@ -1,0 +1,11 @@
+config BR2_PACKAGE_VVVVVV
+	bool "vvvvvv"
+	depends on BR2_INSTALL_LIBSTDCPP
+	select BR2_PACKAGE_SDL2
+	help
+	  VVVVVV
+
+	  https://github.com/djyt/cannonball
+
+comment "VVVVVV needs a toolchain w/ C++, and following libraries : sdl2, boost"
+	depends on !BR2_INSTALL_LIBSTDCPP || !BR2_PACKAGE_SDL2 

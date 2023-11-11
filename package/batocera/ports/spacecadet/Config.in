@@ -1,5 +1,5 @@
 config BR2_PACKAGE_SPACECADET
-	bool "DevilutionX"
+	bool "Space Cadet Pinball"
 	select BR2_PACKAGE_SDL2
 	select BR2_PACKAGE_SDL2_IMAGE
 	help

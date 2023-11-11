@@ -1,0 +1,14 @@
+config BR2_PACKAGE_LIBRETRO_VM
+    bool "libretro-vm"
+	depends on BR2_PACKAGE_RETROARCH
+	depends on BR2_INSTALL_LIBSTDCPP
+      help
+        A libretro core for Vapor Spec, a virtual game platform 
+	with capabilities similar to 80s game consoles. This repo
+	is contains the Windows/Linux implementation, some games,
+	the compiler, assembler, and documentation.
+
+	  http://www.libretro.com
+
+comment "LIBRETRO_VM needs a toolchain w/ C++"
+	depends on !BR2_INSTALL_LIBSTDCPP
