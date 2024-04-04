@@ -1,0 +1,1 @@
+VVVVVV is a commercial game! The author has given special permission to make this port available for free. If you enjoy the game, please consider purchasing a copy at http://thelettervsixtim.es

@@ -78,7 +78,7 @@ endif
 # add platforms that support GLES3 here
 # the GLES3 backend maps to OpenGL 3.3 on desktop, OpenGL ES 3.0 on mobile and WebGL 2.0 on the web.
 if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY || BR2_PACKAGE_BATOCERA_TARGET_BCM2711 || BR2_PACKAGE_BATOCERA_TARGET_BCM2712 || BR2_PACKAGE_BATOCERA_TARGET_RISCV \
-    || BR2_PACKAGE_BATOCERA_TARGET_H616 \
+    || BR2_PACKAGE_BATOCERA_TARGET_H616 || BR2_PACKAGE_BATOCERA_TARGET_H700 \
     || BR2_PACKAGE_BATOCERA_TARGET_AMLOGIC_GLES3 || BR2_PACKAGE_BATOCERA_TARGET_ROCKCHIP_GLES3 \
     || BR2_PACKAGE_BATOCERA_TARGET_ODIN
     config BR2_PACKAGE_BATOCERA_GLES3
@@ -222,7 +222,7 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
     select BR2_PACKAGE_CA_CERTIFICATES                      # ssl certificates
     select BR2_PACKAGE_ROCKCHIP_RGA                         if BR2_PACKAGE_BATOCERA_TARGET_RK3128 # Used for screen rotation (SDL, Retroarch, Moonlight)
 
-    select BR2_PACKAGE_LIBDRM                               if !BR2_PACKAGE_BATOCERA_RPI_VCORE
+    select BR2_PACKAGE_LIBDRM                               if !BR2_PACKAGE_BATOCERA_RPI_VCORE && !BR2_PACKAGE_BATOCERA_TARGET_H700
     select BR2_PACKAGE_BATOCERA_DRMINFO                     if BR2_PACKAGE_LIBDRM
     select BR2_PACKAGE_LIRC_TOOLS                           # lirc (remote control)
     select BR2_PACKAGE_LIBCEC                               # libcec
@@ -333,7 +333,8 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
     select BR2_PACKAGE_RTL8192EU		if  !BR2_PACKAGE_BATOCERA_TARGET_BCM2835    && \
                                             !BR2_PACKAGE_BATOCERA_TARGET_H3         && \
                                             !BR2_PACKAGE_BATOCERA_TARGET_RK3128     && \
-                                            !BR2_PACKAGE_BATOCERA_TARGET_RK3588
+                                            !BR2_PACKAGE_BATOCERA_TARGET_RK3588     && \
+					    !BR2_PACKAGE_BATOCERA_TARGET_H700
 
     select BR2_PACKAGE_RTW89_TEMP       if  BR2_PACKAGE_BATOCERA_TARGET_RK3588
 
@@ -458,6 +459,7 @@ config BR2_TARGET_BATOCERA_IMAGES_DEFINITIONS
     default "allwinner/h5/tritium-h5 allwinner/h5/orangepi-pc2"                             if BR2_PACKAGE_BATOCERA_TARGET_H5
     default "allwinner/h6/orangepi-3-lts allwinner/h6/orangepi-3 allwinner/h6/orangepi-one-plus"       if BR2_PACKAGE_BATOCERA_TARGET_H6
     default "allwinner/h616/orangepi-zero2 allwinner/h616/orangepi-zero3 allwinner/h616/x96-mate"                                    if BR2_PACKAGE_BATOCERA_TARGET_H616
+    default "allwinner/h700/rg35xx-plus"						    if BR2_PACKAGE_BATOCERA_TARGET_H700
     default "amlogic/s812"																	if BR2_PACKAGE_BATOCERA_TARGET_S812
     default "samsung/exynos5422/odroidxu4"													if BR2_PACKAGE_BATOCERA_TARGET_XU4
     default "x86"																			if BR2_PACKAGE_BATOCERA_TARGET_X86
@@ -553,6 +555,9 @@ config BR2_PACKAGE_BATOCERA_TARGET_H5
 config BR2_PACKAGE_BATOCERA_TARGET_H616
     bool "h616"
 
+config BR2_PACKAGE_BATOCERA_TARGET_H700
+    bool "h700"
+
 config BR2_PACKAGE_BATOCERA_TARGET_H6
     bool "h6"
 
@@ -604,7 +609,7 @@ config BR2_PACKAGE_BATOCERA_TOOLS
     select BR2_PACKAGE_HTOP             # multi-cpus usage
     select BR2_PACKAGE_NCDU             # Disk Usage
     select BR2_PACKAGE_FFMPEG_XCBGRAB   if BR2_PACKAGE_XORG7
-    select BR2_PACKAGE_SWITCHRES        if !BR2_PACKAGE_BATOCERA_TARGET_BCM2835 && !BR2_PACKAGE_BATOCERA_WAYLAND # switchres 15kHz
+    select BR2_PACKAGE_SWITCHRES        if !BR2_PACKAGE_BATOCERA_TARGET_BCM2835 && !BR2_PACKAGE_BATOCERA_WAYLAND && !BR2_PACKAGE_BATOCERA_TARGET_H700 # switchres 15kHz
     select BR2_PACKAGE_LIBGPIOD_TOOLS   if BR2_PACKAGE_LIBGPIOD
 
     help
@@ -731,6 +736,7 @@ config BR2_PACKAGE_BATOCERA_SEGADC
                                                 BR2_PACKAGE_BATOCERA_TARGET_BCM2711 || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_BCM2712 || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_RK3326  || \
+                                                BR2_PACKAGE_BATOCERA_TARGET_H700  || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_H3
 
 select BR2_PACKAGE_REDREAM              if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY
@@ -774,7 +780,7 @@ config BR2_PACKAGE_BATOCERA_ARCADE_SYSTEMS
     select BR2_PACKAGE_LIBRETRO_MAME2010        if !BR2_PACKAGE_BATOCERA_TARGET_BCM2835 # MAME2010
     select BR2_PACKAGE_LIBRETRO_MAME            if  !BR2_PACKAGE_BATOCERA_TARGET_BCM2835 && \
 						    !BR2_PACKAGE_BATOCERA_TARGET_H3      && \
-						    !BR2_PACKAGE_BATOCERA_TARGET_RK3128
+						    !BR2_PACKAGE_BATOCERA_TARGET_RK3128 && !BR2_PACKAGE_BATOCERA_TARGET_H700
     select BR2_PACKAGE_LIBRETRO_SAME_CDI        if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
 
     # Standalone MAME
@@ -811,6 +817,7 @@ config BR2_PACKAGE_BATOCERA_HANDHELD_SYSTEMS
                                                     BR2_PACKAGE_BATOCERA_TARGET_RK3326  || \
                                                     BR2_PACKAGE_BATOCERA_TARGET_XU4     || \
                                                     BR2_PACKAGE_BATOCERA_TARGET_H616    || \
+                                                    BR2_PACKAGE_BATOCERA_TARGET_H700    || \
                                                     BR2_PACKAGE_BATOCERA_TARGET_H6
 
     select BR2_PACKAGE_MELONDS                  if BR2_PACKAGE_BATOCERA_TARGET_X86_64_ANY || BR2_PACKAGE_BATOCERA_TARGET_BCM2712
@@ -1096,7 +1103,7 @@ config BR2_PACKAGE_BATOCERA_CONSOLE_SYSTEMS
     select BR2_PACKAGE_BATOCERA_SEGADC
 
     # PSX
-    select BR2_PACKAGE_DUCKSTATION                  if  BR2_PACKAGE_BATOCERA_GLES3 && !BR2_PACKAGE_BATOCERA_TARGET_RK3326 # newer versions of duckstation are stricter on OpenGL 3.1
+    select BR2_PACKAGE_DUCKSTATION                  if  BR2_PACKAGE_BATOCERA_GLES3 && !BR2_PACKAGE_BATOCERA_TARGET_H700 && !BR2_PACKAGE_BATOCERA_TARGET_RK3326 # newer versions of duckstation are stricter on OpenGL 3.1
 
     select BR2_PACKAGE_DUCKSTATION_LEGACY           if  !BR2_PACKAGE_BATOCERA_GLES3             && \
                                                         !BR2_riscv                              && \
@@ -1177,6 +1184,7 @@ config BR2_PACKAGE_BATOCERA_CONSOLE_SYSTEMS
                                                         !BR2_PACKAGE_BATOCERA_TARGET_H3             && \
                                                         !BR2_PACKAGE_BATOCERA_TARGET_RK3326         && \
                                                         !BR2_PACKAGE_BATOCERA_TARGET_H616           && \
+                                                        !BR2_PACKAGE_BATOCERA_TARGET_H700           && \
                                                         !BR2_PACKAGE_BATOCERA_TARGET_H6
 
 
@@ -1198,6 +1206,7 @@ config BR2_PACKAGE_BATOCERA_CONSOLE_SYSTEMS
                                                         !BR2_PACKAGE_BATOCERA_TARGET_S905           && \
                                                         !BR2_PACKAGE_BATOCERA_TARGET_H5     && \
                                                         !BR2_PACKAGE_BATOCERA_TARGET_H616           && \
+                                                        !BR2_PACKAGE_BATOCERA_TARGET_H700           && \
                                                         !BR2_PACKAGE_BATOCERA_TARGET_H6
 
 
@@ -1325,7 +1334,8 @@ config BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL
                                                 BR2_PACKAGE_BATOCERA_TARGET_BCM2712 || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_S922X   || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_RK3568  || \
-                                                BR2_PACKAGE_BATOCERA_TARGET_H616
+                                                BR2_PACKAGE_BATOCERA_TARGET_H616    || \
+                                                BR2_PACKAGE_BATOCERA_TARGET_H700
 
     # Amstrad CPC emulator
     select BR2_PACKAGE_SUGARBOX             if  BR2_x86_64                          || \
@@ -1333,7 +1343,8 @@ config BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL
                                                 BR2_PACKAGE_BATOCERA_TARGET_BCM2712 || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_S922X   || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_RK3568  || \
-                                                BR2_PACKAGE_BATOCERA_TARGET_H616
+                                                BR2_PACKAGE_BATOCERA_TARGET_H616    || \
+                                                BR2_PACKAGE_BATOCERA_TARGET_H700
 
     # Symbian OS / Nokia N-Gage emulator
     select BR2_PACKAGE_EKA2L1		    if  BR2_x86_64                          || \
@@ -1341,14 +1352,16 @@ config BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL
                                             BR2_PACKAGE_BATOCERA_TARGET_BCM2712 || \
                                             BR2_PACKAGE_BATOCERA_TARGET_S922X   || \
                                             BR2_PACKAGE_BATOCERA_TARGET_RK3568  || \
-                                            BR2_PACKAGE_BATOCERA_TARGET_H616
+                                            BR2_PACKAGE_BATOCERA_TARGET_H616    || \
+                                            BR2_PACKAGE_BATOCERA_TARGET_H700
 
     # Supermodel OpenGL ES port
     select BR2_PACKAGE_SUPERMODEL_ES        if	BR2_PACKAGE_BATOCERA_TARGET_BCM2711 || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_BCM2712 || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_S922X   || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_RK3568  || \
-                                                BR2_PACKAGE_BATOCERA_TARGET_H616
+                                                BR2_PACKAGE_BATOCERA_TARGET_H616    || \
+                                                BR2_PACKAGE_BATOCERA_TARGET_H700
 
     # Apple 2
     select BR2_PACKAGE_APPLEWIN		    # ALL
@@ -1362,7 +1375,8 @@ config BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL
                                                 BR2_PACKAGE_BATOCERA_TARGET_BCM2712 || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_S922X   || \
                                                 BR2_PACKAGE_BATOCERA_TARGET_RK3568  || \
-                                                BR2_PACKAGE_BATOCERA_TARGET_H616
+                                                BR2_PACKAGE_BATOCERA_TARGET_H616    || \
+                                                BR2_PACKAGE_BATOCERA_TARGET_H700
 
     help
         Emulators under development (Experimental)
@@ -1652,6 +1666,7 @@ config BR2_PACKAGE_BATOCERA_LINUX_FIRMWARES
 
     # Extra linux firmware
     select BR2_PACKAGE_EXTRALINUXFIRMWARES              if  BR2_PACKAGE_BATOCERA_TARGET_H616            || \
+                                                            BR2_PACKAGE_BATOCERA_TARGET_H700              || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_H6              || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_AMLOGIC_ANY     || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_RK3399
@@ -1659,7 +1674,8 @@ config BR2_PACKAGE_BATOCERA_LINUX_FIRMWARES
     select BR2_PACKAGE_FIRMWARE_ORANGEPI		if BR2_PACKAGE_BATOCERA_TARGET_H3   || \
                                                    BR2_PACKAGE_BATOCERA_TARGET_H5   || \
                                                    BR2_PACKAGE_BATOCERA_TARGET_H6   || \
-                                                   BR2_PACKAGE_BATOCERA_TARGET_H616
+                                                   BR2_PACKAGE_BATOCERA_TARGET_H616 || \
+                                                   BR2_PACKAGE_BATOCERA_TARGET_H700
 
 config BR2_PACKAGE_BATOCERA_SDL2
     bool "BATOCERA SDL2"
@@ -1673,7 +1689,7 @@ config BR2_PACKAGE_BATOCERA_SDL2
     select BR2_PACKAGE_SDL2_OPENGLES
     select BR2_PACKAGE_SDL2_OPENGL      if BR2_PACKAGE_HAS_LIBGL
     select BR2_PACKAGE_SDL2_X11         if BR2_PACKAGE_XORG7
-    select BR2_PACKAGE_SDL2_KMSDRM      if !BR2_PACKAGE_BATOCERA_RPI_VCORE
+    select BR2_PACKAGE_SDL2_KMSDRM      if !BR2_PACKAGE_BATOCERA_RPI_VCORE && !BR2_PACKAGE_BATOCERA_TARGET_H700
     select BR2_PACKAGE_SDL2_WAYLAND     if BR2_PACKAGE_BATOCERA_WAYLAND
     select BR2_PACKAGE_FLAC             # flac
     select BR2_PACKAGE_LIBMAD           # mp3

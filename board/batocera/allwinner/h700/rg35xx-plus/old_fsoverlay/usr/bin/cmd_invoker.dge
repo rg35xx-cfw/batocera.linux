@@ -1,0 +1,57 @@
+#!/bin/bash
+
+SAVEIFS=$IFS
+
+IFS=:
+
+NUM_ARGS=$#
+
+#echo "NUM ARGS: $NUM_ARGS"
+#echo "1: $1"
+#echo "2: $2"
+#echo "3: $3"
+#echo "all: $@"
+
+# Define the command to be launched
+if [ $1 == "#/" ]; then
+    # This is an application or port without arguments
+    LAUNCH_COMMAND="$3"
+elif [ $2 == *_libretro ]; then
+    # This is a retroarch based launcher (*_libretro)
+#    killall -9 evmapy
+    LAUNCH_COMMAND="$1$2 '$3'"
+else
+    # This is a standalone emulator
+    LAUNCH_COMMAND="$1$2 '$3'"
+fi
+
+IFS=$SAVEIFS
+
+export HOME=/userdata/system
+export SDL_NOMOUSE=1
+echo "Launching: $LAUNCH_COMMAND"
+
+# Launch the command and capture the subprocess PID
+eval "$LAUNCH_COMMAND" &
+subprocess_pid=$!
+
+# Main script loop
+while true; do
+    # Check if the subprocess is still running
+    if kill -0 "$subprocess_pid" >/dev/null 2>&1; then
+        echo "Subprocess (PID: $subprocess_pid) is running."
+    else
+        echo "Subprocess (PID: $subprocess_pid) has ended. Launching simplemenu again..."
+        # Launch simplemenui
+	#if [ $2 == *_libretro ]; then
+	#    # Since it was libretro, restart evmapy
+	#    evmapy &
+ 	#fi
+	simplemenu &
+        break
+    fi
+
+    # Delay between each check (in seconds)
+    sleep 3
+done
+

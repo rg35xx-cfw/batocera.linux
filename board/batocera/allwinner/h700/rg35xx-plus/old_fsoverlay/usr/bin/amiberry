@@ -1,0 +1,4 @@
+#!/bin/bash
+
+SDL_RENDER_DRIVER=software /usr/bin/amiberry.bin "$@"
+

@@ -1,0 +1,33 @@
+#!/bin/sh
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+DEVICE="/dev/mmcblk0p4"
+
+case "$1" in
+  start)
+    # Check if the device is mounted
+    MOUNTPOINT=$(grep $DEVICE /etc/mtab | cut -d ' ' -f 2)
+    if [ -n "$MOUNTPOINT" ]; then
+      # Unmount the device
+      echo "Unmounting $DEVICE..."
+      umount $DEVICE
+    fi
+
+    # Check and repair the filesystem
+    echo "Checking FAT32 filesystem on $DEVICE..."
+    fsck.vfat -aw $DEVICE
+
+    # If the device was originally mounted, remount it
+    if [ -n "$MOUNTPOINT" ]; then
+      echo "Remounting $DEVICE to $MOUNTPOINT..."
+      mount $DEVICE $MOUNTPOINT
+    fi
+    ;;
+  *)
+    echo "Usage: /etc/init.d/S08checkfat {start}"
+    exit 1
+    ;;
+esac
+
+exit 0
+

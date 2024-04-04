@@ -1,0 +1,74 @@
+#!/bin/bash
+
+log="/tmp/resize.log"
+
+# only at start
+test "$1" != "start" && exit 0
+
+mount -o rw,remount /boot
+# true if triggers are not available or not set to do so
+if [ ! -f /boot/boot/autoresize ]
+then
+    exit 0
+fi
+
+# UI Output with dialog, default colorset
+function dialogoutput()
+{
+    local percent="$1"
+    local text="Do not switch off your device!"
+
+    dialog --backtitle "Koriki RG35XX" --title " Resizing Partition " \
+           --mixedgauge "$text" 18 50 "$percent" "${arr[@]}" &>/dev/tty1
+}
+
+# Executing parameters and watch background pid
+# Changes text messages parsed to dialog --mixedgauge
+function textoutput()
+{
+    local cmd="$3"
+    local percent="$2"
+    local pid ret
+    echo "cmd:$cmd" >> $log
+    $cmd >> $log 2>&1 &
+    ret=$?
+    pid=$!
+    arr[$1]=7 #msg: In Progress
+    dialogoutput "$percent"
+    wait $pid
+    code=$?
+    echo "cmd code:$code" >> $log
+    arr[$1]=$ret #msg: Depends from return value
+}
+
+    # --- BEGIN RESIZE ---
+    # remove the trigger
+    rm -f /boot/boot/autoresize
+    DISK=/dev/mmcblk0
+    PART=/dev/mmcblk0p4
+    PARTNUM=4
+
+    sync
+    # Backup bootloader
+    dd if=/dev/mmcblk0 bs=1 skip=8192 count=$((0x10000)) of=/tmp/boot_backup.img
+
+    sgdisk -e ${DISK}
+    parted -s -m ${DISK} align-check opt ${PARTNUM}
+    parted -s -m ${DISK} resizepart ${PARTNUM} 100%
+    partprobe ${DISK}
+
+    mkfs.vfat -n SHARE ${PART}
+
+    # Restore bootloader
+    dd if=/tmp/boot_backup.img of=/dev/mmcblk0 bs=1024 seek=8
+
+    echo -e "r\nb\nc\nY\nw\nY\n" | gdisk ${DISK}
+
+    partprobe ${DISK}
+
+    sync
+
+#Cleanup, restore screen, set progress of last item to 100%
+dialogoutput 100
+clear > /dev/tty1
+exit 0

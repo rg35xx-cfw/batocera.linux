@@ -1,0 +1,170 @@
+{
+    "actions": [
+	{
+            "trigger": "BTN_A",
+            "type": "key",
+            "target": "KEY_D"
+        },
+        {
+            "trigger": "BTN_B",
+            "type": "key",
+            "target": "KEY_A"
+        },
+        {
+            "trigger": "BTN_X",
+            "type": "key",
+            "target": "KEY_X"
+        },
+        {
+            "trigger": "BTN_Y",
+            "type": "key",
+            "target": "KEY_S"
+        },
+        {
+            "trigger": "BTN_SELECT",
+            "type": "key",
+            "target": "KEY_SPACE"
+        },
+        {
+            "trigger": "BTN_START",
+            "type": "key",
+            "target": "KEY_ENTER"
+        },
+        {
+            "trigger": "BTN_TL",
+            "type": "key",
+            "target": "KEY_Z"
+        },
+        {
+            "trigger": "BTN_TR",
+            "type": "key",
+            "target": "KEY_F"
+        },
+        {
+            "trigger": "BTN_DPAD_RIGHT",
+            "type": "key",
+            "target": "KEY_RIGHT"
+        },
+        {
+            "trigger": "BTN_DPAD_LEFT",
+            "type": "key",
+            "target": "KEY_LEFT"
+        },
+        {
+            "trigger": "BTN_DPAD_DOWN",
+            "type": "key",
+            "target": "KEY_DOWN"
+        },
+        {
+            "trigger": "BTN_DPAD_UP",
+            "type": "key",
+            "target": "KEY_UP"
+        },
+        {
+            "trigger": ["BTN_SELECT", "BTN_START"],
+            "type": "exec",
+            "target": "killall -9 OpenBOR4432  OpenBOR6330  OpenBOR6412  OpenBOR6510  OpenBOR7142"
+        }
+    ],
+    "grab": false,
+    "axes": [
+        {
+            "name": "ABS_X",
+            "code": 0,
+            "min": -32768,
+            "max": 32767
+        },
+        {
+            "name": "ABS_Y",
+            "code": 1,
+            "min": -32768,
+            "max": 32767
+        },
+        {
+            "name": "ABS_Z",
+            "code": 2,
+            "min": 0,
+            "max": 255
+        },
+        {
+            "name": "ABS_RX",
+            "code": 3,
+            "min": -32768,
+            "max": 32767
+        },
+        {
+            "name": "ABS_RY",
+            "code": 4,
+            "min": -32768,
+            "max": 32767
+        },
+        {
+            "name": "ABS_RZ",
+            "code": 5,
+            "min": 0,
+            "max": 255
+        }
+    ],
+    "buttons": [
+        {
+            "name": "BTN_A",
+            "code": 304
+        },
+        {
+            "name": "BTN_B",
+            "code": 305
+        },
+        {
+            "name": "BTN_X",
+            "code": 307
+        },
+        {
+            "name": "BTN_Y",
+            "code": 308
+        },
+        {
+            "name": "BTN_TL",
+            "code": 310
+        },
+        {
+            "name": "BTN_TR",
+            "code": 311
+        },
+        {
+            "name": "BTN_SELECT",
+            "code": 314
+        },
+        {
+            "name": "BTN_START",
+            "code": 315
+        },
+        {
+            "name": "BTN_MODE",
+            "code": 316
+        },
+        {
+            "name": "BTN_THUMBL",
+            "code": 317
+        },
+        {
+            "name": "BTN_THUMBR",
+            "code": 318
+        },
+        {
+            "name": "BTN_DPAD_UP",
+            "code": 544
+        },
+        {
+            "name": "BTN_DPAD_DOWN",
+            "code": 545
+        },
+        {
+            "name": "BTN_DPAD_LEFT",
+            "code": 546
+        },
+        {
+            "name": "BTN_DPAD_RIGHT",
+            "code": 547
+        }
+    ]
+}

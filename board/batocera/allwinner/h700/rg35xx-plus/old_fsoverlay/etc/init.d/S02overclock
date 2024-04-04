@@ -1,0 +1,43 @@
+#!/bin/bash
+
+do_overclock_rg35xx() {
+    echo "$1" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+    echo "$1" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
+    echo "$1" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
+    echo "$1" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
+}
+
+
+if test "${1}" = "start"
+then
+    OVALUE=$(grep -E '^[ ]*overclocking[ ]*=[ ]*.*[ ]*$' /boot/batocera-boot.conf | sed -e s+"^[ ]*overclocking[ ]*=[ ]*\(.*\)[ ]*$"+"\1"+)
+
+    # ULTRALOW      LOW             MEDIUM  HIGH    TURBO   EXTREME
+    # 480000 720000 1032000 1104000 1200000 1296000 1416000 1512000 
+
+	    case "${OVALUE}" in
+		"extreme")
+		    do_overclock_rg35xx 1512000
+		    ;;
+		"turbo")
+		    do_overclock_rg35xx 1416000
+		    ;;
+		"high")
+		    do_overclock_rg35xx 1296000
+		    ;;
+		"none")
+		    do_overclock_rg35xx 1200000
+		    ;;
+		"low")
+		    do_overclock_rg35xx 1032000
+		    ;;
+		"powersave")
+		    do_overclock_rg35xx 480000
+		    ;;
+		*)
+		    # default
+		    do_overclock_rg35xx 1512000
+		    ;;
+	    esac
+fi
+

@@ -1,0 +1,16 @@
+kernel/drivers/video/backlight/lcd.ko:
+kernel/drivers/video/backlight/backlight.ko:
+kernel/drivers/video/backlight/generic_bl.ko: kernel/drivers/video/backlight/backlight.ko
+kernel/drivers/net/wireless/rtl8821cs/8821cs.ko:
+kernel/drivers/media/v4l2-core/videobuf2-vmalloc.ko:
+kernel/drivers/media/platform/sunxi-vin/modules/sensor/ov5640.ko:
+kernel/drivers/media/platform/sunxi-vin/modules/sensor/gc0310_mipi.ko:
+kernel/drivers/media/platform/sunxi-vin/modules/sensor/gc2355_mipi.ko:
+kernel/drivers/media/platform/sunxi-vin/modules/sensor/gc030a_mipi.ko:
+kernel/drivers/media/platform/sunxi-vin/modules/sensor/gc2385_mipi.ko:
+kernel/drivers/media/platform/sunxi-vin/modules/sensor/gc5024_mipi.ko:
+kernel/drivers/media/platform/sunxi-vin/modules/sensor/imx317_mipi.ko:
+kernel/drivers/media/usb/uvc/uvcvideo.ko: kernel/drivers/media/v4l2-core/videobuf2-vmalloc.ko
+kernel/drivers/media/usb/gspca/gspca_main.ko:
+kernel/drivers/bluetooth/bcm_btlpm.ko:
+kernel/drivers/bluetooth/rtl_btlpm.ko:

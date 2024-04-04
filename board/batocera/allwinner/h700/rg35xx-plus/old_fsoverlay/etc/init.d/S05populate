@@ -1,0 +1,78 @@
+#!/bin/bash
+
+DRIVE="internal"
+
+# only at start
+test "$1" != "start" && exit 0
+
+# Check for external partitions first, try to mount the last one from 4 to 1
+for i in 4 3 2 1; 
+do 
+	if [ -b "/dev/mmcblk1p$i" ]; 
+	then 
+		echo "External /dev/mmcblk1p$i partition exists, mounting..."
+		mount /dev/mmcblk1p$i /userdata
+		DRIVE="external"
+		break
+	fi
+done
+
+# If no partition is mounted then, mount the internal partition
+if [ "$DRIVE" == "internal" ]; then
+	echo "Mounting internal mmcblk0p4..."
+	mount /dev/mmcblk0p4 /userdata
+fi
+
+# Create /userdata/system if it does not exist
+mkdir -p /userdata/system
+
+# Populate /userdata/system
+if [ ! -d "/userdata/system/.simplemenu" ]; then
+	dialog --backtitle "KORIKI RG35xx" --title " Copying content to /userdata " \
+           --infobox "Please wait..." 10 30 &>/dev/tty1
+	# Added -L to copy links as files in FAT32
+	cp -rL /usr/share/simplemenu/.simplemenu /userdata/system/
+fi
+
+# Populate Koriki Apps
+if [ ! -d "/userdata/system/App" ]; then
+	cp -r /usr/share/simplemenu/App /userdata/system/
+fi
+
+# Populate Koriki
+if [ ! -d "/userdata/system/Koriki" ]; then
+	cp -r /usr/share/simplemenu/Koriki /userdata/system/
+fi
+
+# Populate retroarch and flycast configs
+if [ ! -d "/userdata/system/.config" ]; then
+	cp -r /usr/share/simplemenu/.config /userdata/system/
+	cp -r /usr/share/flycast /userdata/system/.config/
+fi
+
+if [ ! -d "/userdata/system/configs" ]; then
+	mkdir -p /userdata/system/configs
+	cp -r /usr/share/configs /userdata/system/
+fi
+
+# Add bios folder if missing
+if [ ! -d "/userdata/bios" ]; then
+	mkdir /userdata/bios
+fi
+
+# Add logs folder if missing
+if [ ! -d "/userdata/system/logs" ]; then
+        mkdir /userdata/system/logs
+fi
+
+# Create the customlauncher file, and set emulationstation as default launcher
+if [ ! -f "/userdata/system/customlauncher" ]; then
+	echo "emulationstation" > /userdata/system/customlauncher
+fi
+
+# Add sound state
+if [ ! -f "/userdata/system/.asound.state" ]; then
+	cp /usr/share/alsa/.asound.state /userdata/system/
+	alsactl restore 0 -f /userdata/system/.asound.state
+fi
+

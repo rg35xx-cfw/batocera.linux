@@ -1,0 +1,143 @@
+#!/bin/bash
+
+log="/tmp/resize.log"
+
+# only at start
+test "$1" != "start" && exit 0
+
+mount -o rw,remount /boot
+# true if triggers are not available or not set to do so
+if [ ! -f /boot/boot/autoresize ]
+then
+    exit 0
+fi
+
+# UI Output with dialog, default colorset
+function dialogoutput()
+{
+    local percent="$1"
+    local text="Do not switch off your device!"
+
+    dialog --backtitle "Koriki RG35XX" --title " Resizing Partition " \
+           --mixedgauge "$text" 18 50 "$percent" "${arr[@]}" &>/dev/tty1
+}
+
+# Executing parameters and watch background pid
+# Changes text messages parsed to dialog --mixedgauge
+function textoutput()
+{
+    local cmd="$3"
+    local percent="$2"
+    local pid ret
+    echo "cmd:$cmd" >> $log
+    $cmd >> $log 2>&1 &
+    ret=$?
+    pid=$!
+    arr[$1]=7 #msg: In Progress
+    dialogoutput "$percent"
+    wait $pid
+    code=$?
+    echo "cmd code:$code" >> $log
+    arr[$1]=$ret #msg: Depends from return value
+}
+
+# only when resizing is wanted
+    # Preparing text arrays
+    arr=(
+    "Syncing disk data..........." "Pending"
+    "Checking disk table........." "Pending"
+    "Probing partition type......" "Pending"
+    "Aligning partition.........." "Pending"
+    "Resizing partition.........." "Pending"
+    "Checking /userdata.........." "Pending"
+    "Resizing /userdata.........." "Pending"
+    "Informing the Kernel........" "Pending"
+    "Syncing disk data..........." "Pending"
+    )
+
+    # --- BEGIN RESIZE ---
+    # remove the trigger
+    rm -f /boot/boot/autoresize
+    DISK=/dev/mmcblk0
+    PART=/dev/mmcblk0p4
+    PARTNUM=4
+
+#    sync
+#    sgdisk -e ${DISK}
+#    parted -s -m ${DISK} align-check opt ${PARTNUM}
+#    parted -s -m ${DISK} resizepart ${PARTNUM} 100%
+#    partprobe
+ 
+# SGDISK METHOD   
+#    sgdisk --backup=table.bin ${DISK}
+#    echo -e "p\n d\n ${PARTNUM}\n n\n ${PARTNUM}\n\n\n w\n Y\n" | gdisk ${DISK}
+#    partprobe ${DISK}
+
+#    e2fsck -f -p ${PART}
+#    mkfs.ext4 -F ${PART}
+    partprobe
+    mkfs.vfat -n SHARE ${PART}
+
+#    echo 't\n${PARTNUM}\nb\nw\n' | fdisk ${DISK}
+#    sleep 0.5
+#    mkfs.vfat -n SHARE ${PART}
+#    sleep 0.5
+#    partprobe ${DISK}
+#    sync
+
+    # textoutput "Message" "percentage" "command call" 
+#    for i in 1 3 5 7 9 11 13 15 17 19 21 23; do
+#    case $i in
+#        1) 
+#           # initial disk sync
+#           echo "Step $i: Sync" >> "$log#"
+#           textoutput $i 10 "sync";;
+#        3) 
+#           # move backup GPT data structures to the end of the disk
+#           echo "Step $i: Moving 2nd GPT table to the end of the disk" >> "$log"
+#           textoutput $i 20 "sgdisk -e ${DISK}";;
+#        5)           
+#           # probing partitions
+#           echo "Step $i: partprobe partitions" >> "$log"
+#           textoutput $i 30 "partprobe";;
+#        7) 
+#           # checking the alignment before resizing the partition
+#           echo "Step $i: Checking the partition alignment" >> "$log"
+#           textoutput $i 40 "parted -s -m ${DISK} align-check opt 4";;
+#        9) 
+#           # resize the partition
+#           echo "Step $i: Resizing the partition to $new_end_size MB" >> "$log"
+#           textoutput $i 50 "parted -s -m ${DISK} resizepart 4 100%";;
+#        11)
+#           echo "Step $i: partprobe again" >> "$log"
+#           textoutput $i 70 "partprobe'";;
+#        13)
+#	   echo "Step $i: Checking ext4 file system" >> "$log"
+#	   textoutput $i 60 "e2fsck -f -p ${PART}";;
+#	15)
+#	    echo "Step $i: Reformat partition in ext4" >> "$log"
+#	    textoutput $i: 70 "mkfs.ext4 -F ${PART}";;
+##        17) 
+#           echo "Step $i: partprobe again" >> "$log"
+#           textoutput $i 70 "partprobe'";;
+##        19) 
+#           echo "Step $i: Formatting partition as FAT32" >> "$log"
+#           textoutput $i 80 "mkfs.vfat -n SHARE ${PART}";;
+#        21) 
+#           # update the kernel again
+#           echo "Step $i: Updating the kernel" >> "$log"
+#           textoutput $i 80 "partprobe ${DISK}";;
+#        23) 
+#           # final disk sync
+#           echo "Step $i: Final sync" >> "$log"
+#           textoutput $i 90 "sync";;
+#    esac
+#    done
+
+
+
+
+#Cleanup, restore screen, set progress of last item to 100%
+dialogoutput 100
+clear > /dev/tty1
+exit 0

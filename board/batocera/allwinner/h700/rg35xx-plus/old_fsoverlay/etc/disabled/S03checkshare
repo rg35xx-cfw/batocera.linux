@@ -1,0 +1,90 @@
+#!/bin/sh
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+check_and_repair_fs() {
+    local fs_type=$1
+    local fs_device=$2
+
+    # Check for dirty bit and repair the filesystem based on its type
+    case "$fs_type" in
+        vfat)
+            if dosfsck -n $fs_device; then
+                echo "vfat filesystem is clean on $fs_device. Skipping fsck."
+            else
+                echo "Checking and repairing vfat filesystem on $fs_device..."
+                fsck.vfat -aw $fs_device
+            fi
+            ;;
+        exfat)
+            if exfatfsck -n $fs_device; then
+                echo "exfat filesystem is clean on $fs_device. Skipping fsck."
+            else
+                echo "Checking and repairing exfat filesystem on $fs_device..."
+                fsck.exfat -aw $fs_device
+            fi
+            ;;
+        ext4)
+            if e2fsck -n $fs_device; then
+                echo "ext4 filesystem is clean on $fs_device. Skipping fsck."
+            else
+                echo "Checking and repairing ext4 filesystem on $fs_device..."
+                fsck.ext4 -p $fs_device
+            fi
+            ;;
+        *)
+            echo "Unsupported filesystem type: $fs_type"
+            return 1
+            ;;
+    esac
+}
+
+get_last_partition() {
+    local device=$1
+    # Get the last partition. Assumes partition names end in numbers.
+    fdisk -l $device | grep "^$device" | awk '{print $1}' | tail -1
+}
+
+case "$1" in
+  start)
+    # Check for external SD card
+    if [ -b /dev/mmcblk1 ]; then
+        DEVICE=$(get_last_partition /dev/mmcblk1)
+    else
+        DEVICE="/dev/mmcblk0p4"
+    fi
+
+    # Get the filesystem type
+    FS_TYPE=$(blkid -o value -s TYPE $DEVICE)
+
+    if [ -z "$FS_TYPE" ]; then
+        echo "Unable to determine filesystem type for $DEVICE"
+        exit 1
+    fi
+
+    # Check if the device is mounted
+    MOUNTPOINT=$(grep $DEVICE /etc/mtab | cut -d ' ' -f 2)
+    if [ -n "$MOUNTPOINT" ]; then
+      # Unmount the device
+      echo "Unmounting $DEVICE..."
+      umount $DEVICE
+    fi
+
+    # Check and repair the filesystem based on type
+    check_and_repair_fs $FS_TYPE $DEVICE
+
+    # If the device was originally mounted, remount it
+    if [ -n "$MOUNTPOINT" ]; then
+      echo "Remounting $DEVICE to $MOUNTPOINT..."
+      mount $DEVICE $MOUNTPOINT
+    fi
+    ;;
+  *)
+    echo "Usage: /etc/init.d/S08checkfat {start}"
+    exit 1
+    ;;
+esac
+
+exit 0
+
+

@@ -1,0 +1,1 @@
+earlyprintk=ttyS0,115200 loglevel=8 initcall_debug=0 console=tty0 console=ttyS0,115200 rootwait root=/dev/mmcblk0p3 init=/sbin/init

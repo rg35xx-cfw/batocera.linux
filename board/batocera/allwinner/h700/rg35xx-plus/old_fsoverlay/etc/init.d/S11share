@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# FIXME: Just to temporary disable S11share from batocera when compiling as buildroot with BR2_EXTERNAL
+#        For batocera builds this should be removed
